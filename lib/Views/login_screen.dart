@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../Components/custom_button.dart';
 import '../Components/custom_text_field.dart';
 import '../services/auth_service.dart';
+import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -273,7 +274,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: Implement forgot password
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
+                        );
                       },
                       child: const Text(
                         'Quên mật khẩu?',

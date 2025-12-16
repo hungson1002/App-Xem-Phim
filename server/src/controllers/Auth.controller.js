@@ -22,6 +22,14 @@ export const Register = async (req, res, next) => {
             })
         }
 
+        // Chỉ lấy mật khẩu từ 6 chữ số trở lên
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters"
+            })
+        }
+
         // Mã hóa password
         const salt = await bcrypt.genSalt(10);
         const hashPassword = await bcrypt.hash(password, salt);
@@ -107,8 +115,8 @@ export const Login = async (req, res, next) => {
                 id: auth._id,
                 name: auth.name,
                 email: auth.email,
-                avatar: auth.avatar,
-                provider: auth.provider
+                avatar: auth.avatar || null,
+                provider: auth.provider || "local"
             }
         })
     } catch (error) {
@@ -134,6 +142,8 @@ export const VerifyEmail = async (req, res, next) => {
         auth.isVerified = true;
         auth.otp = null;
         auth.otpExpires = null;
+        auth.otpResendCount = 0;
+        auth.otpLastSentAt = null;
         await auth.save();
 
         // Trả kết quả cho client
@@ -230,3 +240,159 @@ export const GoogleLogin = async (req, res, next) => {
         next(error);
     }
 }
+
+// Gửi lại otp xác thực email
+export const ResendVerifyOTP = async (req, res, next) => {
+    try {
+        // Lấy email từ client
+        const { email } = req.body;
+
+        // Tìm user theo email
+        const auth = await Auth.findOne({ email });
+
+        // Kiểm tra email có tồn tại không
+        if (!auth) {
+            return res.status(400).json({
+                success: false,
+                message: "Email not found"
+            })
+        }
+
+        // Kiểm tra email đã xác thực chưa
+        if (auth.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already verified"
+            })
+        }
+
+        // Giới hạn 60 giây gửi 1 lần
+        const now = Date.now();
+        if (auth.otpLastSentAt && now - auth.otpLastSentAt < 60 * 1000) {
+            return res.status(429).json({
+                success: false,
+                message: "Please wait before resending OTP"
+            })
+        }
+
+        // Giới hạn số lần 3 lần
+        if (auth.otpResendCount >= 3) {
+            return res.status(429).json({
+                success: false,
+                message: "OTP resend limit reached, please try later"
+            })
+        }
+
+        // Tạo OTP mới
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Cập nhật OTP và thời gian hết hạn
+        auth.otp = otp;
+        auth.otpExpires = now + 5 * 60 * 1000; // Hết hạn sau 5 phút
+        auth.otpResendCount += 1;
+        auth.otpLastSentAt = now;
+        await auth.save();
+
+        // Gửi OTP qua email
+        await sendOTPEmail(email, otp);
+
+        // Trả kết quả cho client
+        return res.status(200).json({
+            success: true,
+            message: "OTP resend successfully"
+        })
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Gửi otp đặt lại mật khẩu
+export const ForgotPassword = async (req, res, next) => {
+    try {
+        // Lấy email từ client
+        const { email } = req.body;
+
+        // tìm user theo email
+        const auth = await Auth.findOne({ email });
+
+        if (!auth) {
+            return res.status(400).json({
+                success: false,
+                message: "Email not found"
+            })
+        }
+
+        // Giới hạn thửu lại sau 60 giây
+        if (auth.resetOtpExpires && auth.resetOtpExpires > Date.now()) {
+            return res.status(429).json({
+                success: false,
+                message: "Please wait before requesting another OTP"
+            });
+        }
+
+        // Tạo OTP 
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Lưu otp và đặt giới hạn thời gian
+        auth.resetOtp = otp;
+        auth.resetOtpExpires = Date.now() + 5 * 60 * 1000;
+        auth.save();
+
+        // Gửi OTP qua email
+        await sendOTPEmail(email, otp);
+
+        // Trả kết quả cho client
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent to reset password"
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Đặt lại mật khẩu
+export const ResetPassword = async (req, res, next) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        // Tìm user theo email
+        const auth = await Auth.findOne({ email });
+
+        // Kiểm tra otp hợp lệ
+        if (!auth || auth.resetOtp !== otp || auth.resetOtpExpires < Date.now()) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired OTP"
+            })
+        }
+
+        // Kiểm tra độ dài password mới
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be at least 6 characters"
+            });
+        }
+
+        // Mã hóa mật khẩu mới
+        const salt = await bcrypt.genSalt(10);
+        auth.password = await bcrypt.hash(newPassword, salt);
+
+        // Xóa resetOTP sau khi dùng
+        auth.resetOtp = undefined;
+        auth.resetOtpExpires = undefined;
+
+        await auth.save();
+
+        // Trả kết quả cho client
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successfully"
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+

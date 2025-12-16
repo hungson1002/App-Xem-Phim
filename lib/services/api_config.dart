@@ -14,6 +14,11 @@ class ApiConfig {
   static String get loginUrl => '$baseUrl$authEndpoint/login';
   static String get verifyEmailUrl => '$baseUrl$authEndpoint/verify-email';
   static String get googleLoginUrl => '$baseUrl$authEndpoint/google-login';
+  static String get resendVerifyOtpUrl =>
+      '$baseUrl$authEndpoint/resend-verify-otp';
+  static String get forgotPasswordUrl =>
+      '$baseUrl$authEndpoint/forgot-password';
+  static String get resetPasswordUrl => '$baseUrl$authEndpoint/reset-password';
 
   // User endpoints
   static String updateUserUrl(String userId) => '$baseUrl$userEndpoint/$userId';

@@ -43,8 +43,21 @@ const authSchema = new mongoose.Schema(
             type: String,
             enum: ['local', 'google'],
             default: 'local'
-        }
+        },
+        resetOtp: {
+            type: String
+        },
+        resetOtpExpires: {
+            type: Date
+        },
+        otpResendCount: {
+            type: Number,
+            default: 0
+        },
 
+        otpLastSentAt: {
+            type: Date
+        },
     },
     {
         timestamps: true

@@ -1,87 +1,40 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../Components/custom_button.dart';
 import '../Components/custom_text_field.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
+import 'reset_password_screen.dart';
 
-class OtpVerificationScreen extends StatefulWidget {
-  final String email;
-
-  const OtpVerificationScreen({super.key, required this.email});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final _otpController = TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
-  bool _isResending = false;
   String? _errorMessage;
+  String? _successMessage;
 
-  // Countdown timer for resend OTP
-  int _resendCountdown = 0;
-  Timer? _countdownTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _startResendCountdown();
-  }
-
-  void _startResendCountdown() {
-    _resendCountdown = 60;
-    _countdownTimer?.cancel();
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendCountdown > 0) {
-        setState(() {
-          _resendCountdown--;
-        });
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
-  void _resendOtp() async {
-    if (_resendCountdown > 0) return;
-
-    setState(() {
-      _isResending = true;
-      _errorMessage = null;
-    });
-
-    final response = await _authService.resendVerifyOtp(email: widget.email);
-
-    setState(() {
-      _isResending = false;
-    });
-
-    if (response.success) {
-      _startResendCountdown();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã gửi lại mã OTP!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } else {
+  void _sendOtp() async {
+    // Validate input
+    if (_emailController.text.isEmpty) {
       setState(() {
-        _errorMessage = response.message ?? 'Không thể gửi lại mã OTP';
+        _errorMessage = 'Vui lòng nhập email';
+        _successMessage = null;
       });
+      return;
     }
-  }
 
-  void _verifyOtp() async {
-    if (_otpController.text.isEmpty) {
+    // Validate email format
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(_emailController.text.trim())) {
       setState(() {
-        _errorMessage = 'Vui lòng nhập mã OTP';
+        _errorMessage = 'Email không hợp lệ';
+        _successMessage = null;
       });
       return;
     }
@@ -89,11 +42,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _successMessage = null;
     });
 
-    final response = await _authService.verifyEmail(
-      email: widget.email,
-      otp: _otpController.text.trim(),
+    final response = await _authService.forgotPassword(
+      email: _emailController.text.trim(),
     );
 
     setState(() {
@@ -101,24 +54,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
 
     if (response.success) {
-      // Show success message and navigate to login
+      // Navigate to reset password screen
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Xác nhận email thành công! Vui lòng đăng nhập.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushAndRemoveUntil(
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
+          MaterialPageRoute(
+            builder: (context) =>
+                ResetPasswordScreen(email: _emailController.text.trim()),
+          ),
         );
       }
     } else {
       setState(() {
-        _errorMessage =
-            response.message ?? 'Mã OTP không hợp lệ hoặc đã hết hạn';
+        _errorMessage = response.message ?? 'Không thể gửi mã OTP';
       });
     }
   }
@@ -157,7 +105,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   padding: const EdgeInsets.all(24),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 48, // Trừ padding
+                      minHeight: constraints.maxHeight - 48,
                     ),
                     child: IntrinsicHeight(
                       child: Column(
@@ -187,7 +135,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.email_outlined,
+                                Icons.lock_reset,
                                 size: 40,
                                 color: Color(0xFF5BA3F5),
                               ),
@@ -199,7 +147,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           // Title
                           const Center(
                             child: Text(
-                              'Xác nhận Email',
+                              'Quên mật khẩu?',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 28,
@@ -211,11 +159,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           const SizedBox(height: 16),
 
                           // Subtitle
-                          Center(
+                          const Center(
                             child: Text(
-                              'Chúng tôi đã gửi mã OTP đến\n${widget.email}',
+                              'Nhập email của bạn để nhận\nmã OTP đặt lại mật khẩu',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 16,
                                 height: 1.5,
@@ -258,18 +206,51 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ),
                             ),
 
-                          // OTP Field
+                          // Success Message
+                          if (_successMessage != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle_outline,
+                                    color: Colors.green,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _successMessage!,
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Email Field
                           CustomTextField(
-                            label: 'Mã OTP',
-                            hint: 'Nhập mã 6 số',
-                            icon: Icons.lock_outline,
-                            controller: _otpController,
-                            keyboardType: TextInputType.number,
+                            label: 'Email',
+                            hint: 'Nhập email của bạn',
+                            icon: Icons.email_outlined,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
                           ),
 
                           const SizedBox(height: 32),
 
-                          // Verify Button
+                          // Send OTP Button
                           _isLoading
                               ? const Center(
                                   child: CircularProgressIndicator(
@@ -277,40 +258,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   ),
                                 )
                               : CustomButton(
-                                  text: 'Xác nhận',
-                                  onPressed: _verifyOtp,
+                                  text: 'Gửi mã OTP',
+                                  onPressed: _sendOtp,
                                   backgroundColor: const Color(0xFF5BA3F5),
                                 ),
 
-                          const SizedBox(height: 24),
+                          const Spacer(),
 
-                          // Resend OTP
+                          // Back to Login
                           Center(
-                            child: _isResending
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFF5BA3F5),
-                                    ),
-                                  )
-                                : TextButton(
-                                    onPressed: _resendCountdown > 0
-                                        ? null
-                                        : _resendOtp,
-                                    child: Text(
-                                      _resendCountdown > 0
-                                          ? 'Gửi lại sau ${_resendCountdown}s'
-                                          : 'Gửi lại mã OTP',
-                                      style: TextStyle(
-                                        color: _resendCountdown > 0
-                                            ? Colors.grey
-                                            : const Color(0xFF5BA3F5),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text(
+                                'Quay lại đăng nhập',
+                                style: TextStyle(
+                                  color: Color(0xFF5BA3F5),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -327,8 +293,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
-    _otpController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 }

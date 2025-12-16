@@ -16,9 +16,10 @@ export const sendOTPEmail = async (to, otp) => {
         to,
         subject: 'Mã xác nhận đăng ký',
         html: `
-        <h2 style = "color: #333;">Mã xác nhận của bạn</h2>
-        <h1>${otp}</h1>
-        <p>Mã có hiệu lực trong 5 phút</p>
+        <h2 style = "color: #333;">Mã xác nhận của bạn là</h2>
+        <h1 style = "color: #333;">${otp}</h1>
+        <p style = "color: #333;">Mã có hiệu lực trong 5 phút</p>
+        <p style = "color: #333;">Nếu bạn không yêu cầu mã xác nhận này, vui lòng bỏ qua email này</p>
         `
     });
 }

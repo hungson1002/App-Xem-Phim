@@ -215,4 +215,69 @@ class AuthService {
     await prefs.remove(ApiConfig.tokenKey);
     await prefs.remove(ApiConfig.userKey);
   }
+
+  /// Resend OTP for email verification
+  /// Returns AuthResponse with success status
+  Future<AuthResponse> resendVerifyOtp({required String email}) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.resendVerifyOtpUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(ApiConfig.timeout);
+
+      final data = jsonDecode(response.body);
+      return AuthResponse.fromJson(data);
+    } catch (e) {
+      return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
+    }
+  }
+
+  /// Request OTP for password reset
+  /// Returns AuthResponse with success status
+  Future<AuthResponse> forgotPassword({required String email}) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.forgotPasswordUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(ApiConfig.timeout);
+
+      final data = jsonDecode(response.body);
+      return AuthResponse.fromJson(data);
+    } catch (e) {
+      return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
+    }
+  }
+
+  /// Reset password with OTP
+  /// Returns AuthResponse with success status
+  Future<AuthResponse> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.resetPasswordUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email,
+              'otp': otp,
+              'newPassword': newPassword,
+            }),
+          )
+          .timeout(ApiConfig.timeout);
+
+      final data = jsonDecode(response.body);
+      return AuthResponse.fromJson(data);
+    } catch (e) {
+      return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
+    }
+  }
 }

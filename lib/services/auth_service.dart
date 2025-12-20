@@ -7,15 +7,11 @@ import '../models/auth_response.dart';
 import '../models/user_model.dart';
 import 'api_config.dart';
 
-/// Service class for handling authentication API calls
 class AuthService {
-  // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  /// Register a new user
-  /// Returns AuthResponse with success status and message
   Future<AuthResponse> register({
     required String name,
     required String email,
@@ -41,8 +37,6 @@ class AuthService {
     }
   }
 
-  /// Login with email and password
-  /// Returns AuthResponse with token and user data on success
   Future<AuthResponse> login({
     required String email,
     required String password,
@@ -70,8 +64,6 @@ class AuthService {
     }
   }
 
-  /// Verify email with OTP code
-  /// Returns AuthResponse with success status
   Future<AuthResponse> verifyEmail({
     required String email,
     required String otp,
@@ -92,8 +84,6 @@ class AuthService {
     }
   }
 
-  /// Login with Google token
-  /// Returns AuthResponse with token and user data on success
   Future<AuthResponse> googleLogin({required String googleToken}) async {
     try {
       final url = ApiConfig.googleLoginUrl;
@@ -116,7 +106,6 @@ class AuthService {
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
 
-      // Save token and user data if login successful
       if (authResponse.success && authResponse.token != null) {
         await _saveAuthData(authResponse.token!, authResponse.user);
       }
@@ -128,8 +117,6 @@ class AuthService {
     }
   }
 
-  /// Update user profile (name, avatar, password)
-  /// Returns AuthResponse with updated user data on success
   Future<AuthResponse> updateProfile({
     required String userId,
     String? name,
@@ -163,7 +150,6 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        // Update local storage with new user data
         if (data['user'] != null) {
           final updatedUser = User.fromJson(data['user']);
           final prefs = await SharedPreferences.getInstance();
@@ -178,7 +164,6 @@ class AuthService {
     }
   }
 
-  /// Save authentication data to local storage
   Future<void> _saveAuthData(String token, User? user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(ApiConfig.tokenKey, token);
@@ -187,13 +172,11 @@ class AuthService {
     }
   }
 
-  /// Get saved token from local storage
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(ApiConfig.tokenKey);
   }
 
-  /// Get saved user from local storage
   Future<User?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString(ApiConfig.userKey);
@@ -203,21 +186,17 @@ class AuthService {
     return null;
   }
 
-  /// Check if user is logged in
   Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null;
   }
 
-  /// Logout - clear saved data
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(ApiConfig.tokenKey);
     await prefs.remove(ApiConfig.userKey);
   }
 
-  /// Resend OTP for email verification
-  /// Returns AuthResponse with success status
   Future<AuthResponse> resendVerifyOtp({required String email}) async {
     try {
       final response = await http
@@ -235,8 +214,6 @@ class AuthService {
     }
   }
 
-  /// Request OTP for password reset
-  /// Returns AuthResponse with success status
   Future<AuthResponse> forgotPassword({required String email}) async {
     try {
       final response = await http
@@ -254,8 +231,6 @@ class AuthService {
     }
   }
 
-  /// Reset password with OTP
-  /// Returns AuthResponse with success status
   Future<AuthResponse> resetPassword({
     required String email,
     required String otp,

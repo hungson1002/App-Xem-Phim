@@ -4,7 +4,11 @@ import '../Components/comment_section.dart';
 import '../Components/custom_button.dart';
 
 class MovieDetailScreen extends StatefulWidget {
-  const MovieDetailScreen({super.key});
+  final String movieId;
+  
+  // Tạm thời để default value để không lỗi các màn hình khác
+  // Sau này bạn nên truyền ID thật từ API phim
+  const MovieDetailScreen({super.key, this.movieId = 'avengers-endgame-2019'});
 
   @override
   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
@@ -379,7 +383,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   const SizedBox(height: 24),
                   
                   // Comments Section
-                  const CommentSection(),
+                  CommentSection(movieId: widget.movieId),
 
                   const SizedBox(height: 24),
                   

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../models/comment_model.dart';
+import '../models/user_model.dart';
+import '../services/auth_service.dart';
+import '../services/comment_service.dart';
 
 class CommentSection extends StatefulWidget {
-  const CommentSection({super.key});
+  final String movieId;
+
+  const CommentSection({super.key, required this.movieId});
 
   @override
   State<CommentSection> createState() => _CommentSectionState();
@@ -9,40 +15,94 @@ class CommentSection extends StatefulWidget {
 
 class _CommentSectionState extends State<CommentSection> {
   final TextEditingController _commentController = TextEditingController();
+  final CommentService _commentService = CommentService();
+  final AuthService _authService = AuthService();
 
-  final List<Map<String, String>> _comments = [
-    {
-      'name': 'Nguyễn Văn A',
-      'time': '2 giờ trước',
-      'comment': 'Phim rất hay, cảnh chiến đấu đẹp mắt, cốt truyện cuốn hút!',
-      'avatar': 'https://i.pravatar.cc/150?img=15',
-    },
-    {
-      'name': 'Trần Thị B',
-      'time': '5 giờ trước',
-      'comment': 'Kết thúc hoàn hảo cho chuỗi phim Avengers. Đáng xem!',
-      'avatar': 'https://i.pravatar.cc/150?img=16',
-    },
-    {
-      'name': 'Phạm Văn C',
-      'time': '1 ngày trước',
-      'comment': 'Hiệu ứng CGI tuyệt vời, dàn diễn viên đỉnh cao!',
-      'avatar': 'https://i.pravatar.cc/150?img=17',
-    },
-  ];
+  List<Comment> _comments = [];
+  bool _isLoading = true;
+  User? _currentUser;
+  bool _isSending = false;
 
-  void _addComment() {
-    if (_commentController.text.trim().isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-    setState(() {
-      _comments.insert(0, {
-        'name': 'Tên người dùng',
-        'time': 'Vừa xong',
-        'comment': _commentController.text.trim(),
-        'avatar': 'https://i.pravatar.cc/150?img=12',
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final user = await _authService.getUser();
+    final comments = await _commentService.getComments(widget.movieId);
+
+    if (mounted) {
+      setState(() {
+        _currentUser = user;
+        _comments = comments;
+        _isLoading = false;
       });
-      _commentController.clear();
-    });
+    }
+  }
+
+  Future<void> _addComment() async {
+    // 1. Kiểm tra nội dung rỗng
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+
+    // 2. Kiểm tra đăng nhập
+    if (_currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để bình luận'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Bắt đầu gửi -> Hiện loading
+    setState(() => _isSending = true);
+    FocusScope.of(context).unfocus(); // Ẩn bàn phím ngay lập tức cho mượt
+
+    try {
+      // Gọi Service
+      final newComment = await _commentService.addComment(widget.movieId, content);
+
+      if (!mounted) return; // Kiểm tra nếu màn hình đã đóng thì dừng lại
+
+      setState(() => _isSending = false);
+
+      if (newComment != null) {
+        // --- THÀNH CÔNG ---
+        setState(() {
+          _comments.insert(0, newComment); // Thêm bình luận mới vào đầu danh sách
+          _commentController.clear();      // Xóa ô nhập liệu
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã gửi bình luận!'), backgroundColor: Colors.green),
+        );
+      } else {
+        // --- THẤT BẠI (Do Server trả về null) ---
+        // Đây là chỗ bạn đang bị dính lỗi màu đỏ
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không gửi được. Hãy kiểm tra lại Đăng Nhập hoặc Kết Nối.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // --- LỖI KẾT NỐI (Mất mạng, Server sập) ---
+      if (mounted) {
+        setState(() => _isSending = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        print("🔴 LỖI CHI TIẾT: $e");
+      }
+    }
   }
 
   @override
@@ -63,22 +123,11 @@ class _CommentSectionState extends State<CommentSection> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Bình luận',
+              'Bình luận (${_comments.length})',
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text(
-                'XEM TẤT CẢ',
-                style: TextStyle(
-                  color: Color(0xFF5BA3F5),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ),
           ],
@@ -87,16 +136,36 @@ class _CommentSectionState extends State<CommentSection> {
         const SizedBox(height: 16),
 
         // Comments List
-        ...(_comments.map((comment) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildComment(
-                isDark: isDark,
-                name: comment['name']!,
-                time: comment['time']!,
-                comment: comment['comment']!,
-                avatar: comment['avatar']!,
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (_comments.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                'Chưa có bình luận nào. Hãy là người đầu tiên!',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
               ),
-            ))),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _comments.length,
+            itemBuilder: (context, index) {
+              final comment = _comments[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildComment(
+                  isDark: isDark,
+                  comment: comment,
+                ),
+              );
+            },
+          ),
 
         // Add Comment Input
         Container(
@@ -109,7 +178,12 @@ class _CommentSectionState extends State<CommentSection> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
+                backgroundImage: _currentUser?.avatar != null
+                    ? NetworkImage(_currentUser!.avatar!)
+                    : null,
+                child: _currentUser?.avatar == null
+                    ? const Icon(Icons.person, size: 20)
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -119,23 +193,33 @@ class _CommentSectionState extends State<CommentSection> {
                     color: isDark ? Colors.white : Colors.black,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Viết bình luận...',
+                    hintText: _currentUser != null
+                        ? 'Viết bình luận...'
+                        : 'Đăng nhập để bình luận',
                     hintStyle: TextStyle(
                       color: isDark ? Colors.grey : Colors.black45,
                     ),
                     border: InputBorder.none,
                   ),
                   maxLines: null,
+                  enabled: _currentUser != null,
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(
-                  Icons.send,
-                  color: Color(0xFF5BA3F5),
+              if (_isSending)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                IconButton(
+                  icon: const Icon(
+                    Icons.send,
+                    color: Color(0xFF5BA3F5),
+                  ),
+                  onPressed: _currentUser != null ? _addComment : null,
                 ),
-                onPressed: _addComment,
-              ),
             ],
           ),
         ),
@@ -145,10 +229,7 @@ class _CommentSectionState extends State<CommentSection> {
 
   Widget _buildComment({
     required bool isDark,
-    required String name,
-    required String time,
-    required String comment,
-    required String avatar,
+    required Comment comment,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -163,7 +244,12 @@ class _CommentSectionState extends State<CommentSection> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: NetworkImage(avatar),
+                backgroundImage: comment.user?.avatar != null
+                    ? NetworkImage(comment.user!.avatar!)
+                    : null,
+                child: comment.user?.avatar == null
+                    ? const Icon(Icons.person)
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -171,7 +257,7 @@ class _CommentSectionState extends State<CommentSection> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      comment.user?.name ?? 'Người dùng',
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black,
                         fontSize: 14,
@@ -180,7 +266,7 @@ class _CommentSectionState extends State<CommentSection> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      time,
+                      comment.displayTime,
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
@@ -189,19 +275,11 @@ class _CommentSectionState extends State<CommentSection> {
                   ],
                 ),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.favorite_border,
-                  color: isDark ? Colors.grey : Colors.black54,
-                  size: 20,
-                ),
-                onPressed: () {},
-              ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            comment,
+            comment.content,
             style: TextStyle(
               color: isDark ? Colors.white70 : Colors.black87,
               fontSize: 14,

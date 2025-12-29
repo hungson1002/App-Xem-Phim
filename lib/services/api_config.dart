@@ -8,6 +8,7 @@ class ApiConfig {
   // API Endpoints
   static const String authEndpoint = '/api/auth';
   static const String userEndpoint = '/api/user';
+  static const String commentEndpoint = '/api/comments';
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';
@@ -22,6 +23,11 @@ class ApiConfig {
 
   // User endpoints
   static String updateUserUrl(String userId) => '$baseUrl$userEndpoint/$userId';
+
+  // Comment endpoints
+  static String getCommentsUrl(String movieId) =>
+      '$baseUrl$commentEndpoint/$movieId';
+  static String get addCommentUrl => '$baseUrl$commentEndpoint/add';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

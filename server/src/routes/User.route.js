@@ -1,13 +1,15 @@
 import express from "express";
 import { deleteUser, getAllUser, getUser, updateUser } from "../controllers/User.controller.js";
 
-import { authMiddleware } from "../middleware/authMiddleware.js";
+// ✅ 1. Sửa dòng import này (đổi authMiddleware thành verifyToken)
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", authMiddleware, getAllUser)
-router.get("/:id", authMiddleware, getUser)
-router.put("/:id", authMiddleware, updateUser)
-router.delete("/:id", authMiddleware, deleteUser)
+// ✅ 2. Sửa tên middleware trong các dòng dưới đây
+router.get("/", verifyToken, getAllUser);
+router.get("/:id", verifyToken, getUser);
+router.put("/:id", verifyToken, updateUser);
+router.delete("/:id", verifyToken, deleteUser);
 
 export default router;

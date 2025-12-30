@@ -3,7 +3,7 @@ import 'user_model.dart';
 class Comment {
   final String id;
   final User? user;
-  final String content;
+  String content;
   final DateTime createdAt;
   final String movieId;
 

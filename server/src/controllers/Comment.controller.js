@@ -78,3 +78,73 @@ export const addComment = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// 3. Xóa bình luận
+export const deleteComment = async (req, res) => {
+  try {
+    const { movieId, commentId } = req.params;
+    const userId = req.authId || req.userId; // Lấy ID người đang request
+
+    // Tìm phim và dùng $pull để rút comment ra khỏi mảng
+    // Điều kiện: Phải đúng movieId, đúng commentId VÀ đúng userId (chính chủ)
+    const updatedMovie = await Comment.findOneAndUpdate(
+      { movieId: movieId },
+      {
+        $pull: {
+          comments: { _id: commentId, userId: userId }
+        }
+      },
+      { new: true } // Trả về dữ liệu mới sau khi xóa
+    );
+
+    if (!updatedMovie) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bình luận hoặc bạn không có quyền xóa' });
+    }
+
+    res.status(200).json({ success: true, message: 'Đã xóa bình luận' });
+
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 4. Sửa bình luận
+export const updateComment = async (req, res) => {
+  try {
+    const { movieId, commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.authId || req.userId;
+
+    if (!content) return res.status(400).json({ success: false, message: 'Nội dung trống' });
+
+    // Dùng kỹ thuật "Positional Operator ($)" để update đúng phần tử trong mảng
+    const updatedMovie = await Comment.findOneAndUpdate(
+      {
+        movieId: movieId,
+        "comments._id": commentId,
+        "comments.userId": userId // Chỉ chủ nhân mới tìm thấy để sửa
+      },
+      {
+        $set: {
+          "comments.$.content": content, // Dấu $ đại diện cho vị trí tìm thấy
+          "comments.$.updatedAt": new Date()
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedMovie) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy hoặc không có quyền sửa' });
+    }
+
+    // Lấy lại comment vừa sửa để trả về App cập nhật giao diện
+    const editedComment = updatedMovie.comments.find(c => c._id.toString() === commentId);
+
+    res.status(200).json({ success: true, data: editedComment });
+
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

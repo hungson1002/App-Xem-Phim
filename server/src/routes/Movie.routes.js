@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/', getAllMovies);
 router.get('/:slug', getMovieBySlug);
-router.post('/', createMovie); // Add auth middleware if needed
-router.put('/:id', updateMovie); // Add auth middleware if needed
-router.delete('/:id', deleteMovie); // Add auth middleware if needed
+router.post('/', createMovie);
+router.put('/:id', updateMovie);
+router.delete('/:id', deleteMovie);
 
 export default router;

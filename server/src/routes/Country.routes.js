@@ -4,7 +4,7 @@ import { createCountry, deleteCountry, getAllCountries } from '../controllers/Co
 const router = express.Router();
 
 router.get('/', getAllCountries);
-router.post('/', createCountry); // Add auth middleware if needed
-router.delete('/:id', deleteCountry); // Add auth middleware if needed
+router.post('/', createCountry);
+router.delete('/:id', deleteCountry);
 
 export default router;

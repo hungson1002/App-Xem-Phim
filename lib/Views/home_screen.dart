@@ -1,12 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import '../Components/bottom_navbar.dart';
 import '../Components/movie_card.dart';
 import '../Components/movie_slide.dart';
 import '../models/user_model.dart';
+import '../models/movie_model.dart';
 import '../services/auth_service.dart';
+import '../services/movie_service.dart';
 import 'bookmark_screen.dart';
 import 'movie_detail_screen.dart';
 import 'profile_screen.dart';
@@ -21,21 +22,40 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final List<bool> _bookmarkedMovies = List.filled(10, false);
   final AuthService _authService = AuthService();
+  final MovieService _movieService = MovieService();
   User? _user;
+  
+  List<Movie> _featuredMovies = [];
+  List<Movie> _newMovies = [];
+  List<Movie> _recommendedMovies = []; // Could filter by category
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadData();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
     final user = await _authService.getUser();
-    setState(() {
-      _user = user;
-    });
+    
+    // Fetch real data
+    // Example: Feature = limit 5, New = limit 10, Recommended = category 'hanh-dong'
+    final featured = await _movieService.getMoviesLimit(5);
+    final newRelease = await _movieService.getMoviesByYear(2025, limit: 10);
+    final recommended = await _movieService.getMoviesByCategory('hanh-dong', limit: 10);
+
+    if (mounted) {
+      setState(() {
+        _user = user;
+        _featuredMovies = featured;
+        _newMovies = newRelease;
+        _recommendedMovies = recommended;
+        _isLoading = false;
+      });
+    }
   }
 
   ImageProvider? _getAvatarImage() {
@@ -57,69 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return NetworkImage(avatar);
     }
   }
-
-  final List<Map<String, String>> _featuredMovies = [
-    {
-      'title': 'Dune: Part Two',
-      'year': '2024',
-      'genre': 'Khoa học viễn tưởng',
-      'image': 'https://picsum.photos/seed/dune/400/600',
-    },
-    {
-      'title': 'Inception',
-      'year': '2010',
-      'genre': 'Khoa học viễn tưởng',
-      'image': 'https://picsum.photos/seed/inception/400/600',
-    },
-    {
-      'title': 'Interstellar',
-      'year': '2014',
-      'genre': 'Viễn tưởng',
-      'image': 'https://picsum.photos/seed/interstellar/400/600',
-    },
-  ];
-
-  final List<Map<String, String>> _newMovies = [
-    {
-      'title': 'The Fall Guy',
-      'year': '2024',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/fallguy/200/300',
-    },
-    {
-      'title': 'Civil War',
-      'year': '2024',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/civilwar/200/300',
-    },
-    {
-      'title': 'Furiosa',
-      'year': '2024',
-      'genre': 'Phiêu lưu',
-      'image': 'https://picsum.photos/seed/furiosa/200/300',
-    },
-  ];
-
-  final List<Map<String, String>> _recommendedMovies = [
-    {
-      'title': 'Joker',
-      'year': '2019',
-      'genre': 'Tội phạm',
-      'image': 'https://picsum.photos/seed/joker/200/300',
-    },
-    {
-      'title': 'Interstellar',
-      'year': '2014',
-      'genre': 'Viễn tưởng',
-      'image': 'https://picsum.photos/seed/inter2/200/300',
-    },
-    {
-      'title': 'Parasite',
-      'year': '2019',
-      'genre': 'Kịch tính',
-      'image': 'https://picsum.photos/seed/parasite/200/300',
-    },
-  ];
 
   void _onNavBarTap(int index) {
     if (index == _currentIndex) return;
@@ -231,17 +188,24 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: MovieSlide(
-                  movies: _featuredMovies,
-                  bookmarkedStates: _bookmarkedMovies,
+                child: _isLoading ? const Center(child: CircularProgressIndicator()) : MovieSlide(
+                  movies: _featuredMovies.map((m) => {
+                    'title': m.name,
+                    'year': m.year.toString(),
+                    'genre': m.type, // or category name
+                    'image': m.posterUrl
+                  }).toList(),
+                  bookmarkedStates: List.filled(_featuredMovies.length, false), // TODO: implement real bookmark check
                   onBookmark: (index) {
-                    setState(() {
-                      _bookmarkedMovies[index] = !_bookmarkedMovies[index];
-                    });
+                     // TODO: Call API
                   },
                   onMovieTap: (index) {
-                    // TODO: Navigate to movie detail
-                    print('Tapped on ${_featuredMovies[index]['title']}');
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MovieDetailScreen(), // TODO: Pass movie slug/id
+                      ),
+                    );
                   },
                 ),
               ),
@@ -287,29 +251,27 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 250,
-                child: ListView.builder(
+                child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator()) 
+                  : ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _newMovies.length,
                   itemBuilder: (context, index) {
+                    final movie = _newMovies[index];
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: SizedBox(
                         width: 160,
                         child: MovieCard(
-                          title: _newMovies[index]['title']!,
-                          imageUrl: _newMovies[index]['image']!,
-                          year: _newMovies[index]['year'],
-                          genre: _newMovies[index]['genre'],
-                          isBookmarked: _bookmarkedMovies[index + 1],
-                          onBookmark: () {
-                            setState(() {
-                              _bookmarkedMovies[index + 1] =
-                                  !_bookmarkedMovies[index + 1];
-                            });
-                          },
+                          title: movie.name,
+                          imageUrl: movie.posterUrl.isNotEmpty ? movie.posterUrl : 'https://picsum.photos/200/300',
+                          year: movie.year.toString(),
+                          genre: movie.type, 
+                          isBookmarked: false, // TODO
+                          onBookmark: () {},
                           onTap: () {
-                            Navigator.push(
+                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const MovieDetailScreen(),
@@ -358,27 +320,23 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 250,
-                child: ListView.builder(
+                child: _isLoading ? const Center(child: CircularProgressIndicator()) : ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _recommendedMovies.length,
                   itemBuilder: (context, index) {
+                     final movie = _recommendedMovies[index];
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: SizedBox(
                         width: 160,
                         child: MovieCard(
-                          title: _recommendedMovies[index]['title']!,
-                          imageUrl: _recommendedMovies[index]['image']!,
-                          year: _recommendedMovies[index]['year'],
-                          genre: _recommendedMovies[index]['genre'],
-                          isBookmarked: _bookmarkedMovies[index + 4],
-                          onBookmark: () {
-                            setState(() {
-                              _bookmarkedMovies[index + 4] =
-                                  !_bookmarkedMovies[index + 4];
-                            });
-                          },
+                          title: movie.name,
+                          imageUrl: movie.posterUrl.isNotEmpty ? movie.posterUrl : 'https://picsum.photos/200/300',
+                          year: movie.year.toString(),
+                          genre: movie.type,
+                          isBookmarked: false,
+                          onBookmark: () {},
                           onTap: () {
                             Navigator.push(
                               context,
@@ -429,26 +387,32 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 250,
-                child: ListView.builder(
+                child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator()) 
+                  : ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _recommendedMovies.length,
                   itemBuilder: (context, index) {
+                    final movie = _recommendedMovies[index];
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: SizedBox(
                         width: 160,
                         child: MovieCard(
-                          title: _recommendedMovies[index]['title']!,
-                          imageUrl: _recommendedMovies[index]['image']!,
-                          year: _recommendedMovies[index]['year'],
-                          genre: _recommendedMovies[index]['genre'],
-                          isBookmarked: _bookmarkedMovies[index + 4],
-                          onBookmark: () {
-                            setState(() {
-                              _bookmarkedMovies[index + 4] =
-                                  !_bookmarkedMovies[index + 4];
-                            });
+                          title: movie.name,
+                          imageUrl: movie.posterUrl.isNotEmpty ? movie.posterUrl : 'https://picsum.photos/200/300',
+                          year: movie.year.toString(),
+                          genre: movie.type, 
+                          isBookmarked: false, // TODO
+                          onBookmark: () {},
+                          onTap: () {
+                             Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MovieDetailScreen(),
+                              ),
+                            );
                           },
                         ),
                       ),

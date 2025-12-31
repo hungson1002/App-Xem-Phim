@@ -14,6 +14,8 @@ const MovieSchema = new mongoose.Schema({
     // Media URLs
     poster_url: { type: String },
     thumb_url: { type: String },
+    webp_poster: { type: String },
+    webp_thumb: { type: String },
     trailer_url: { type: String },
 
     // Chi tiết kỹ thuật

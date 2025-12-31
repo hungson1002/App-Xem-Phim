@@ -216,3 +216,73 @@ export const getMoviesLimit = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// 10. Search Movies
+export const searchMovies = async (req, res) => {
+    try {
+        const { q, page = 1, limit = 20 } = req.query;
+        const skip = (page - 1) * limit;
+
+        if (!q || q.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Search query is required'
+            });
+        }
+
+        // Helper function to remove Vietnamese diacritics
+        const removeDiacritics = (str) => {
+            return str
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D');
+        };
+
+        const normalizedQuery = removeDiacritics(q.toLowerCase());
+
+        // Create search patterns for both original and normalized text
+        const searchPatterns = [
+            q, // Original query
+            normalizedQuery, // Normalized query
+        ];
+
+        // Build search query with multiple patterns
+        const searchQuery = {
+            $or: []
+        };
+
+        // Add patterns for each field
+        searchPatterns.forEach(pattern => {
+            searchQuery.$or.push(
+                { name: { $regex: pattern, $options: 'i' } },
+                { origin_name: { $regex: pattern, $options: 'i' } },
+                { slug: { $regex: pattern, $options: 'i' } },
+                { content: { $regex: pattern, $options: 'i' } }
+            );
+        });
+
+        const movies = await Movie.find(searchQuery)
+            .sort({ 'modified.time': -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
+
+        const total = await Movie.countDocuments(searchQuery);
+
+        res.status(200).json({
+            success: true,
+            data: movies,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            },
+            query: q,
+            normalizedQuery: normalizedQuery
+        });
+    } catch (error) {
+        console.error('Search error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

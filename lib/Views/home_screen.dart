@@ -12,6 +12,7 @@ import 'bookmark_screen.dart';
 import 'movie_detail_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
+import 'watchrooms_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final MovieService _movieService = MovieService();
   User? _user;
-  
+
   List<Movie> _featuredMovies = [];
   List<Movie> _newMovies = [];
   List<Movie> _recommendedMovies = [];
@@ -40,11 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final user = await _authService.getUser();
-    
+
     // Lấy dữ liệu thực từ API
     final featured = await _movieService.getMoviesLimit(5);
     final newRelease = await _movieService.getMoviesByYear(2025, limit: 10);
-    final recommended = await _movieService.getMoviesByCategory('hanh-dong', limit: 10);
+    final recommended = await _movieService.getMoviesByCategory(
+      'hanh-dong',
+      limit: 10,
+    );
 
     if (mounted) {
       setState(() {
@@ -101,26 +105,35 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: _isLoading ? const Center(child: CircularProgressIndicator()) : MovieSlide(
-                  movies: _featuredMovies.map((m) => {
-                    'title': m.name,
-                    'year': m.year.toString(),
-                    'genre': m.type, // or category name
-                    'image': m.posterUrl
-                  }).toList(),
-                  bookmarkedStates: List.filled(_featuredMovies.length, false),
-                  onBookmark: (index) {
-                     // Xử lý hành động bookmark
-                  },
-                  onMovieTap: (index) {
-                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MovieDetailScreen(),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : MovieSlide(
+                        movies: _featuredMovies
+                            .map(
+                              (m) => {
+                                'title': m.name,
+                                'year': m.year.toString(),
+                                'genre': m.type, // or category name
+                                'image': m.posterUrl,
+                              },
+                            )
+                            .toList(),
+                        bookmarkedStates: List.filled(
+                          _featuredMovies.length,
+                          false,
+                        ),
+                        onBookmark: (index) {
+                          // Xử lý hành động bookmark
+                        },
+                        onMovieTap: (index) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MovieDetailScreen(),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
 

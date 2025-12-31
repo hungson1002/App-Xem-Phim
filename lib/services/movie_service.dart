@@ -92,4 +92,29 @@ class MovieService {
       return null;
     }
   }
+
+  // Search movies
+  Future<List<Movie>> searchMovies(String query, {int page = 1, int limit = 20}) async {
+    try {
+      final uri = Uri.parse(ApiConfig.searchMoviesUrl).replace(queryParameters: {
+        'q': query,
+        'page': page.toString(),
+        'limit': limit.toString(),
+      });
+      
+      final response = await http.get(uri).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final List<dynamic> moviesData = data['data'];
+          return moviesData.map((json) => Movie.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error searching movies: $e');
+      return [];
+    }
+  }
 }

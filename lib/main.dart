@@ -9,12 +9,16 @@ import 'Views/profile_screen.dart';
 import 'Views/register_screen.dart';
 import 'Views/search_screen.dart';
 import 'theme_provider.dart';
+import 'providers/watch_room_provider.dart';
 import 'utils.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => WatchRoomProvider()),
+      ],
       child: const MyApp(),
     ),
   );

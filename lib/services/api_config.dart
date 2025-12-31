@@ -2,8 +2,9 @@
 
 class ApiConfig {
   // Base URL for the backend API
+  // Web: dùng IP thực của máy
   // Android Emulator: dùng 10.0.2.2 thay cho localhost
-  static const String baseUrl = 'http://10.0.2.2:4000';
+  static const String baseUrl = 'http://10.0.4.1:4000';
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
@@ -36,6 +37,7 @@ class ApiConfig {
   static String getMoviesByCountryUrl(String slug) => '$baseUrl$movieEndpoint/country/$slug';
   static String getMoviesByYearUrl(int year) => '$baseUrl$movieEndpoint/year/$year';
   static String getMovieDetailUrl(String slug) => '$baseUrl$movieEndpoint/$slug';
+  static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

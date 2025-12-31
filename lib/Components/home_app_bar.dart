@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils.dart';
 import '../Views/search_screen.dart';
 import '../Views/profile_screen.dart';
+import '../Views/watchrooms_list_screen.dart';
 import '../models/user_model.dart';
 
 class HomeAppBar extends StatelessWidget {
@@ -14,7 +15,9 @@ class HomeAppBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SliverAppBar(
-      backgroundColor: isDark ? const Color(0xFF0B0E13) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark
+          ? const Color(0xFF0B0E13)
+          : const Color(0xFFF5F5F5),
       elevation: 0,
       floating: true,
       pinned: true,
@@ -38,16 +41,20 @@ class HomeAppBar extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(
-            Icons.search,
-            color: isDark ? Colors.white : Colors.black,
-          ),
+          icon: Icon(Icons.search, color: isDark ? Colors.white : Colors.black),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const SearchScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const SearchScreen()),
+            );
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.people, color: isDark ? Colors.white : Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const WatchRoomsScreen()),
             );
           },
         ),
@@ -55,9 +62,7 @@ class HomeAppBar extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const ProfileScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           },
           child: Padding(
@@ -65,13 +70,11 @@ class HomeAppBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xFF5BA3F5),
-              backgroundImage: user?.avatar != null ? Utils.getImageProvider(user!.avatar) : null,
+              backgroundImage: user?.avatar != null
+                  ? Utils.getImageProvider(user!.avatar)
+                  : null,
               child: user?.avatar == null || user!.avatar!.isEmpty
-                  ? const Icon(
-                      Icons.person,
-                      size: 18,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.person, size: 18, color: Colors.white)
                   : null,
             ),
           ),

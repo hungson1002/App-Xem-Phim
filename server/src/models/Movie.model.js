@@ -2,14 +2,13 @@ import mongoose from 'mongoose';
 
 const MovieSchema = new mongoose.Schema({
     // Thông tin cơ bản
-    _id: { type: String, required: true }, // ID của phim (ví dụ: "21e45351cbbcb790e2aa2e046405fb1f")
-
+    _id: { type: String, required: true },
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     origin_name: { type: String },
     content: { type: String },
-    type: { type: String }, // series, single, tv, etc.
-    status: { type: String }, // ongoing, completed, etc.
+    type: { type: String },
+    status: { type: String },
     year: { type: Number },
 
     // Media URLs
@@ -18,7 +17,7 @@ const MovieSchema = new mongoose.Schema({
     trailer_url: { type: String },
 
     // Chi tiết kỹ thuật
-    time: { type: String }, // "34 phút/tập"
+    time: { type: String },
     episode_current: { type: String },
     episode_total: { type: String },
     quality: { type: String },
@@ -57,13 +56,9 @@ const MovieSchema = new mongoose.Schema({
         time: { type: Date }
     },
 
-    // Arrays
     actor: [{ type: String }],
     director: [{ type: String }],
 
-    // References (lưu dạng object embedded như data mẫu hoặc reference ID)
-    // Dựa vào mẫu: nó lưu mảng object {id, name, slug}. 
-    // Để đơn giản và đúng với data import, ta define schema embedded.
     category: [{
         id: { type: String },
         name: { type: String },
@@ -76,7 +71,6 @@ const MovieSchema = new mongoose.Schema({
         slug: { type: String }
     }],
 
-    // Episodes Data
     episodes: [{
         server_name: { type: String },
         server_data: [{
@@ -89,10 +83,10 @@ const MovieSchema = new mongoose.Schema({
     }]
 
 }, {
-    timestamps: true // Tự động thêm createdAt, updatedAt (ngoài created.time/modified.time của source)
+    timestamps: true
 });
 
-// Index text search nếu cần
+// Index text search
 MovieSchema.index({ name: 'text', origin_name: 'text' });
 
 const Movie = mongoose.model('Movie', MovieSchema);

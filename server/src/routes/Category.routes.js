@@ -4,7 +4,7 @@ import { createCategory, deleteCategory, getAllCategories } from '../controllers
 const router = express.Router();
 
 router.get('/', getAllCategories);
-router.post('/', createCategory); // Add auth middleware if needed
-router.delete('/:id', deleteCategory); // Add auth middleware if needed
+router.post('/', createCategory);
+router.delete('/:id', deleteCategory);
 
 export default router;

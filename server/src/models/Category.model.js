@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const CategorySchema = new mongoose.Schema({
   _id: {
-    type: String, // ID từ API nguồn (ví dụ: "252e74b4c832ddb4233d7499f5ed122e")
+    type: String,
     required: true
   },
   name: {
@@ -15,7 +15,7 @@ const CategorySchema = new mongoose.Schema({
     unique: true
   }
 }, {
-  timestamps: true 
+  timestamps: true
 });
 
 const Category = mongoose.model('Category', CategorySchema);

@@ -1,6 +1,6 @@
 import Movie from '../models/Movie.model.js';
 
-// 1. Get All Movies (with Pagination and Search)
+// 1. Get All Movies 
 export const getAllMovies = async (req, res) => {
     try {
         const { page = 1, limit = 20, search } = req.query;
@@ -78,8 +78,7 @@ export const createMovie = async (req, res) => {
 // 4. Update Movie
 export const updateMovie = async (req, res) => {
     try {
-        const { id } = req.params; // Expect _id or slug? Usually _id for updates
-        // If id matches internal _id
+        const { id } = req.params;
         const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
             new: true,
             runValidators: true

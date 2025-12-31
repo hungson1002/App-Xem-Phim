@@ -28,7 +28,6 @@ export const getAllUser = async (req, res, next) => {
     try {
         const users = await Auth.find().select("-password -otp -otpExpires").sort({ createdAt: -1 })
 
-        // Trả dữ liệu về client
         res.status(200).json({
             success: true,
             total: users.length,
@@ -53,7 +52,6 @@ export const updateUser = async (req, res, next) => {
             })
         }
 
-        //Cho phép thay đổi các trường
         if (name) user.name = name
         if (avatar) user.avatar = avatar
         if (password) {

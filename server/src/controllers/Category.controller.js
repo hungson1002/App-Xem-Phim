@@ -15,7 +15,6 @@ export const createCategory = async (req, res) => {
     try {
         const { name, slug, _id } = req.body;
 
-        // Basic validation
         if (!name || !slug) {
             return res.status(400).json({ success: false, message: 'Name and Slug are required' });
         }
@@ -23,7 +22,7 @@ export const createCategory = async (req, res) => {
         const newCategory = new Category({
             name,
             slug,
-            _id: _id || undefined // Use provided _id or let mongoose/mongodb generate if not provided (though my model schema for _id is String required, so better provide it or handle generation logic if source doesn't have it. The source ID seems to be a hash string.)
+            _id: _id || undefined
         });
 
         const savedCategory = await newCategory.save();

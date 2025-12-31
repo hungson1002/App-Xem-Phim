@@ -20,7 +20,7 @@ export const createCountry = async (req, res) => {
         }
 
         const newCountry = new Country({
-            id, // Custom ID field from source
+            id,
             name,
             slug
         });
@@ -40,11 +40,7 @@ export const createCountry = async (req, res) => {
 export const deleteCountry = async (req, res) => {
     try {
         const { id } = req.params;
-        // Note: We search by custom 'id' field, or _id? Model has 'id' field unique. 
-        // Usually 'findById' looks for _id. If we want to find by 'id' field:
         const deletedCountry = await Country.findOneAndDelete({ id: id });
-        // OR if Mongoose auto-cast, but 'id' is String here. 
-        // Let's assume params 'id' matches the 'id' field of the schema.
 
         if (!deletedCountry) {
             return res.status(404).json({ success: false, message: 'Country not found' });

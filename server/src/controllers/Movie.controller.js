@@ -109,3 +109,96 @@ export const deleteMovie = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// 6. Get Movies by Category
+export const getMoviesByCategory = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const { slug } = req.params;
+        const skip = (page - 1) * limit;
+
+        const query = { "category.slug": slug };
+
+        const movies = await Movie.find(query)
+            .sort({ 'modified.time': -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
+
+        const total = await Movie.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            data: movies,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 7. Get Movies by Country
+export const getMoviesByCountry = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const { slug } = req.params;
+        const skip = (page - 1) * limit;
+
+        const query = { "country.slug": slug };
+
+        const movies = await Movie.find(query)
+            .sort({ 'modified.time': -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
+
+        const total = await Movie.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            data: movies,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 8. Get Movies by Year
+export const getMoviesByYear = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const { year } = req.params;
+        const skip = (page - 1) * limit;
+
+        const query = { year: parseInt(year) };
+
+        const movies = await Movie.find(query)
+            .sort({ 'modified.time': -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
+
+        const total = await Movie.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            data: movies,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

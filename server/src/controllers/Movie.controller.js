@@ -202,3 +202,17 @@ export const getMoviesByYear = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// 9. Get Movies by Limit
+export const getMoviesLimit = async (req, res) => {
+    try {
+        const { limit } = req.params;
+        const movies = await Movie.find({})
+            .sort({ 'modified.time': -1 })
+            .limit(parseInt(limit));
+
+        res.status(200).json({ success: true, data: movies });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

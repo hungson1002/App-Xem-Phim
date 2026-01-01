@@ -260,14 +260,20 @@ class SocketService {
   }
 
   // Chat methods
-  void sendMessage(String roomId, String message, {double videoTimestamp = 0}) {
+  void sendMessage(String roomId, String message, {double videoTimestamp = 0, ChatReply? replyTo}) {
     if (!_isConnected || _socket == null) return;
 
-    _socket!.emit('send-message', {
+    final data = {
       'roomId': roomId,
       'message': message,
       'videoTimestamp': videoTimestamp,
-    });
+    };
+
+    if (replyTo != null) {
+      data['replyTo'] = replyTo.toJson();
+    }
+
+    _socket!.emit('send-message', data);
   }
 
   void addReaction(String messageId, String emoji) {

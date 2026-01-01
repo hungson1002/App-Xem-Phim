@@ -138,6 +138,7 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
           onRefresh: () => provider.loadPublicRooms(),
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: provider.publicRooms.length,
             itemBuilder: (context, index) {
               final room = provider.publicRooms[index];
@@ -151,128 +152,132 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
 
   Widget _buildRoomCard(WatchRoom room) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isEnded = room.status != 'active';
     
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: isDark ? Colors.grey[850] : Colors.white,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WatchRoomScreen(roomId: room.roomId),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Movie poster
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  room.movieInfo?.posterUrl ?? '',
-                  width: 60,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 60,
-                      height: 90,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.movie),
-                    );
-                  },
-                ),
+    return Opacity(
+      opacity: isEnded ? 0.6 : 1.0,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        color: isDark ? Colors.grey[850] : Colors.white,
+        child: InkWell(
+          onTap: isEnded ? null : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WatchRoomScreen(roomId: room.roomId),
               ),
-              
-              const SizedBox(width: 16),
-              
-              // Room info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      room.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Movie poster
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    room.movieInfo?.posterUrl ?? '',
+                    width: 60,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 60,
+                        height: 90,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.movie),
+                      );
+                    },
+                  ),
+                ),
+                
+                const SizedBox(width: 16),
+                
+                // Room info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        room.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    Text(
-                      room.movieInfo?.name ?? 'Unknown Movie',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people,
-                          size: 16,
+                      
+                      const SizedBox(height: 4),
+                      
+                      Text(
+                        room.movieInfo?.name ?? 'Unknown Movie',
+                        style: TextStyle(
+                          fontSize: 14,
                           color: Colors.grey[600],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${room.userCount}/${room.maxUsers}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 16),
-                        
-                        if (room.isPrivate)
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      Row(
+                        children: [
                           Icon(
-                            Icons.lock,
+                            Icons.people,
                             size: 16,
                             color: Colors.grey[600],
                           ),
-                        
-                        const Spacer(),
-                        
-                        // Status indicator
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: room.status == 'active' 
-                                ? Colors.green.withOpacity(0.2)
-                                : Colors.grey.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            room.status == 'active' ? 'Đang hoạt động' : 'Đã kết thúc',
+                          const SizedBox(width: 4),
+                          Text(
+                            '${room.userCount}/${room.maxUsers}',
                             style: TextStyle(
-                              fontSize: 10,
-                              color: room.status == 'active' ? Colors.green : Colors.grey,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.grey[600],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          
+                          const SizedBox(width: 16),
+                          
+                          if (room.isPrivate)
+                            Icon(
+                              Icons.lock,
+                              size: 16,
+                              color: Colors.grey[600],
+                            ),
+                          
+                          const Spacer(),
+                          
+                          // Status indicator
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: room.status == 'active' 
+                                  ? Colors.green.withOpacity(0.2)
+                                  : Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              room.status == 'active' ? 'Đang hoạt động' : 'Đã kết thúc',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: room.status == 'active' ? Colors.green : Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

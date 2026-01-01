@@ -162,7 +162,7 @@ class SocketService {
 
             await room.save();
 
-            // Join socket room
+            // Join socket.io room
             socket.join(roomId);
             socket.currentRoom = roomId;
 
@@ -279,26 +279,40 @@ class SocketService {
         }
     }
 
-    async handleSendMessage(socket, { roomId, message, videoTimestamp }) {
+    async handleSendMessage(socket, { roomId, message, videoTimestamp, replyTo }) {
         try {
-            const room = await WatchRoom.findOne({ roomId });
-            if (!room || !room.settings.allowChat) return;
+            console.log(`📥 Received send-message from ${socket.username}: "${message}" to room: ${roomId}`);
 
+            const room = await WatchRoom.findOne({ roomId });
+            if (!room) {
+                console.log(`❌ Room not found: ${roomId}`);
+                return;
+            }
+
+            if (!room.settings.allowChat) {
+                console.log(`❌ Chat disabled for room: ${roomId}`);
+                return;
+            }
+
+            console.log(`✅ Creating chat message...`);
             const chatMessage = new ChatMessage({
                 roomId,
                 userId: socket.userId,
                 username: socket.username,
                 avatar: socket.avatar,
                 message: message.trim(),
-                videoTimestamp: videoTimestamp || 0
+                videoTimestamp: videoTimestamp || 0,
+                replyTo: replyTo || null
             });
 
             await chatMessage.save();
+            console.log(`💾 Message saved to DB: ${chatMessage._id}`);
 
             this.io.to(roomId).emit('new-message', chatMessage);
+            console.log(`📤 Emitted new-message to room: ${roomId}`);
 
         } catch (error) {
-            console.error('Send message error:', error);
+            console.error('❌ Send message error:', error);
         }
     }
 
@@ -368,11 +382,14 @@ class SocketService {
             const room = await WatchRoom.findOne({ roomId });
             if (!room) return;
 
-            // Remove user from room
-            room.currentUsers = room.currentUsers.filter(u => u.userId.toString() !== socket.userId);
+            // Remove user from room (with safe null check)
+            room.currentUsers = room.currentUsers.filter(u => {
+                if (!u || !u.userId) return false;
+                return u.userId.toString() !== socket.userId;
+            });
 
             // If host leaves and there are other users, transfer host
-            if (room.hostId.toString() === socket.userId && room.currentUsers.length > 0) {
+            if (room.hostId && socket.userId && room.hostId.toString() === socket.userId && room.currentUsers.length > 0) {
                 const newHost = room.currentUsers[0];
                 room.hostId = newHost.userId;
                 newHost.isHost = true;

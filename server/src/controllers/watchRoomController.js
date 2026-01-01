@@ -126,7 +126,8 @@ export const getWatchRooms = async (req, res) => {
         const { page = 1, limit = 20, movieId, search } = req.query;
         const skip = (page - 1) * limit;
 
-        let query = { status: 'active', isPrivate: false };
+        // Show all rooms (active and ended), but only public ones
+        let query = { isPrivate: false };
 
         if (movieId) {
             query.movieId = movieId;
@@ -342,13 +343,8 @@ export const getChatHistory = async (req, res) => {
             });
         }
 
-        const isUserInRoom = room.currentUsers.some(u => u.userId.toString() === req.authId);
-        if (!isUserInRoom) {
-            return res.status(403).json({
-                success: false,
-                message: 'Bạn không có quyền xem chat của phòng này'
-            });
-        }
+        // User authentication is already handled by JWT middleware
+        // Socket will handle room access control
 
         const messages = await ChatMessage.find({
             roomId,

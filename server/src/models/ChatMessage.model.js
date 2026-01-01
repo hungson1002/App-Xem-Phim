@@ -46,6 +46,16 @@ const ChatMessageSchema = new mongoose.Schema({
             default: Date.now
         }
     }],
+    // Tin nhắn trả lời
+    replyTo: {
+        messageId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'ChatMessage',
+            default: null
+        },
+        username: String,
+        message: String
+    },
     // Tin nhắn có bị xóa không
     isDeleted: {
         type: Boolean,

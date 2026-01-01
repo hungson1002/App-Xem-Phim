@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/watch_room_model.dart';
 import '../models/chat_message_model.dart';
-import '../services/watch_room_service.dart';
+import '../services/watchroom_service.dart';
 import '../services/socket_service.dart';
 
 class WatchRoomProvider with ChangeNotifier {
@@ -226,8 +226,18 @@ class WatchRoomProvider with ChangeNotifier {
           await connectSocket();
         }
 
+        // Listen for room-joined event before loading chat
+        final subscription = _socketService.roomJoinedStream.listen((room) async {
+          await loadChatHistory(roomId);
+        });
+
+        // Join room via socket
         _socketService.joinRoom(roomId, password: password);
-        await loadChatHistory(roomId);
+
+        // Clean up subscription after 5 seconds
+        Future.delayed(const Duration(seconds: 5), () {
+          subscription.cancel();
+        });
       } else {
         _setError(result['message']);
       }
@@ -286,12 +296,13 @@ class WatchRoomProvider with ChangeNotifier {
   }
 
   // Chat
-  void sendMessage(String message) {
+  void sendMessage(String message, {ChatReply? replyTo}) {
     if (_currentRoom != null && _isConnected && message.trim().isNotEmpty) {
       _socketService.sendMessage(
         _currentRoom!.roomId,
         message.trim(),
         videoTimestamp: _currentTime,
+        replyTo: replyTo,
       );
     }
   }
@@ -336,7 +347,7 @@ class WatchRoomProvider with ChangeNotifier {
     } finally {
       if (page > 1) {
         _isLoadingMoreChat = false;
-        notifyListeners(); // Validate state update
+        notifyListeners();
       }
     }
   }

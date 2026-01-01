@@ -227,10 +227,18 @@ class WatchRoomService {
 
       final response = await http.get(uri, headers: headers);
       final data = jsonDecode(response.body);
-
+      
       if (response.statusCode == 200) {
         final messages = (data['data']['messages'] as List)
-            .map((message) => ChatMessage.fromJson(message))
+            .map((message) {
+              try {
+                return ChatMessage.fromJson(message);
+              } catch (e) {
+                print('Error parsing message: $e');
+                return null;
+              }
+            })
+            .whereType<ChatMessage>()
             .toList();
 
         return {

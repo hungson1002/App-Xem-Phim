@@ -14,10 +14,12 @@ class WatchRoomChat extends StatefulWidget {
 class _WatchRoomChatState extends State<WatchRoomChat> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   final AuthService _authService = AuthService();
   String? _currentUserId;
 
   String? _lastMessageId;
+  ChatMessage? _replyToMessage;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -94,8 +97,24 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     if (message.isEmpty) return;
 
     final provider = Provider.of<WatchRoomProvider>(context, listen: false);
-    provider.sendMessage(message);
+    
+    ChatReply? replyTo;
+    if (_replyToMessage != null) {
+      replyTo = ChatReply(
+        messageId: _replyToMessage!.id,
+        username: _replyToMessage!.username,
+        message: _replyToMessage!.message,
+      );
+    }
+
+    provider.sendMessage(message, replyTo: replyTo);
     _messageController.clear();
+    
+    if (_replyToMessage != null) {
+      setState(() {
+        _replyToMessage = null;
+      });
+    }
     // Scroll triggers automatically via listener
   }
 
@@ -232,7 +251,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -259,6 +278,43 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Reply Context (if any)
+                if (message.replyTo != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(left: 8, top: 2, bottom: 2),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.replyTo!.username,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        Text(
+                          message.replyTo!.message,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Username and timestamp
                 Row(
                   children: [
@@ -321,31 +377,52 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                       children: _buildReactions(message, provider),
                     ),
                   ),
+
+                // Like Icon Button (Quick Reaction)
+                GestureDetector(
+                   onTap: () => _showReactionPicker(message, provider),
+                   child: Container(
+                     margin: const EdgeInsets.only(top: 4),
+                     padding: const EdgeInsets.all(4),
+                     decoration: BoxDecoration(
+                       shape: BoxShape.circle,
+                       color: Colors.grey.withOpacity(0.1),
+                     ),
+                     child: const Icon(
+                       Icons.favorite_border,
+                       size: 14,
+                       color: Colors.grey,
+                     ),
+                   ),
+                ),
               ],
             ),
           ),
           
-          // Message actions
+          // Message actions (Menu)
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, size: 16),
             onSelected: (value) {
               switch (value) {
-                case 'react':
-                  _showReactionPicker(message, provider);
+                case 'reply':
+                  setState(() {
+                    _replyToMessage = message;
+                  });
+                  _focusNode.requestFocus();
                   break;
                 case 'copy':
-                  // Copy message
+                  // TODO: Implement copy
                   break;
               }
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
-                value: 'react',
+                value: 'reply',
                 child: Row(
                   children: [
-                    Icon(Icons.emoji_emotions, size: 16),
+                    Icon(Icons.reply, size: 16),
                     SizedBox(width: 8),
-                    Text('Thả cảm xúc'),
+                    Text('Trả lời'),
                   ],
                 ),
               ),
@@ -420,7 +497,6 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
 
   Widget _buildMessageInput(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[800] : Colors.grey[100],
         border: Border(
@@ -429,38 +505,87 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
           ),
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Nhập tin nhắn...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: isDark ? Colors.grey[700] : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+          if (_replyToMessage != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: isDark ? Colors.grey[900] : Colors.grey[200],
+              child: Row(
+                children: [
+                  const Icon(Icons.reply, size: 16, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Đang trả lời ${_replyToMessage!.username}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                        Text(
+                          _replyToMessage!.message,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: () {
+                      setState(() {
+                        _replyToMessage = null;
+                      });
+                    },
+                  ),
+                ],
               ),
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(),
             ),
-          ),
-          
-          const SizedBox(width: 8),
-          
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: _sendMessage,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Nhập tin nhắn...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey[700] : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    maxLines: null,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _sendMessage,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

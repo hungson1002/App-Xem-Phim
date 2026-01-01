@@ -27,13 +27,26 @@ class ChatMessage {
     this.deletedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.replyTo,
   });
 
+  final ChatReply? replyTo;
+
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    // Safe userId extraction
+    String userId = '';
+    if (json['userId'] != null) {
+      if (json['userId'] is String) {
+        userId = json['userId'];
+      } else if (json['userId'] is Map) {
+        userId = json['userId']['_id'] ?? '';
+      }
+    }
+
     return ChatMessage(
       id: json['_id'] ?? '',
       roomId: json['roomId'] ?? '',
-      userId: json['userId'] is String ? json['userId'] : json['userId']['_id'] ?? '',
+      userId: userId,
       username: json['username'] ?? '',
       avatar: json['avatar'] ?? '',
       message: json['message'] ?? '',
@@ -42,6 +55,7 @@ class ChatMessage {
       reactions: (json['reactions'] as List<dynamic>?)
           ?.map((reaction) => MessageReaction.fromJson(reaction))
           .toList() ?? [],
+      replyTo: json['replyTo'] != null ? ChatReply.fromJson(json['replyTo']) : null,
       isDeleted: json['isDeleted'] ?? false,
       deletedAt: json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
@@ -60,6 +74,7 @@ class ChatMessage {
       'type': type,
       'videoTimestamp': videoTimestamp,
       'reactions': reactions.map((reaction) => reaction.toJson()).toList(),
+      'replyTo': replyTo?.toJson(),
       'isDeleted': isDeleted,
       'deletedAt': deletedAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
@@ -104,6 +119,44 @@ class MessageReaction {
       'userId': userId,
       'emoji': emoji,
       'createdAt': createdAt.toIso8601String(),
+    };
+  }
+}
+
+class ChatReply {
+  final String messageId;
+  final String username;
+  final String message;
+
+  ChatReply({
+    required this.messageId,
+    required this.username,
+    required this.message,
+  });
+
+  factory ChatReply.fromJson(Map<String, dynamic> json) {
+    // Safe messageId extraction
+    String messageId = '';
+    if (json['messageId'] != null) {
+      if (json['messageId'] is String) {
+        messageId = json['messageId'];
+      } else if (json['messageId'] is Map) {
+        messageId = json['messageId']['_id'] ?? '';
+      }
+    }
+
+    return ChatReply(
+      messageId: messageId,
+      username: json['username'] ?? '',
+      message: json['message'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'messageId': messageId,
+      'username': username,
+      'message': message,
     };
   }
 }

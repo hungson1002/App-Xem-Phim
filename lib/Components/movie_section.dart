@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import '../models/movie_model.dart';
-import 'movie_card.dart';
-import '../Views/movie_detail_screen.dart';
 
-class MovieSection extends StatelessWidget {
+import '../Views/movie_detail_screen.dart';
+import '../models/movie_model.dart';
+import '../services/saved_movie_service.dart';
+import 'movie_card.dart';
+
+class MovieSection extends StatefulWidget {
   final String title;
   final List<Movie> movies;
   final bool isLoading;
   final VoidCallback? onSeeAll;
   final IconData? titleIcon;
+  final Set<String>? savedMovieSlugs;
 
   const MovieSection({
     super.key,
@@ -18,7 +20,54 @@ class MovieSection extends StatelessWidget {
     required this.isLoading,
     this.onSeeAll,
     this.titleIcon,
+    this.savedMovieSlugs,
   });
+
+  @override
+  State<MovieSection> createState() => _MovieSectionState();
+}
+
+class _MovieSectionState extends State<MovieSection> {
+  final SavedMovieService _savedMovieService = SavedMovieService();
+  Set<String> _localSavedSlugs = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _localSavedSlugs = Set.from(widget.savedMovieSlugs ?? {});
+  }
+
+  @override
+  void didUpdateWidget(MovieSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.savedMovieSlugs != oldWidget.savedMovieSlugs) {
+      _localSavedSlugs = Set.from(widget.savedMovieSlugs ?? {});
+    }
+  }
+
+  Future<void> _toggleBookmark(Movie movie) async {
+    final slug = movie.slug;
+    final wasSaved = _localSavedSlugs.contains(slug);
+
+    final result = await _savedMovieService.toggleBookmark(slug);
+
+    if (result['success'] == true && mounted) {
+      setState(() {
+        if (wasSaved) {
+          _localSavedSlugs.remove(slug);
+        } else {
+          _localSavedSlugs.add(slug);
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(wasSaved ? 'Đã xóa khỏi danh sách' : 'Đã lưu phim'),
+          backgroundColor: wasSaved ? Colors.orange : const Color(0xFF5BA3F5),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,16 +83,16 @@ class MovieSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (titleIcon != null) ...[
+                  if (widget.titleIcon != null) ...[
                     Icon(
-                      titleIcon,
+                      widget.titleIcon,
                       color: const Color(0xFF5BA3F5),
                       size: 24,
                     ),
                     const SizedBox(width: 8),
                   ],
                   Text(
-                    title,
+                    widget.title,
                     style: TextStyle(
                       color: isDark ? Colors.white : Colors.black,
                       fontSize: 18,
@@ -52,9 +101,9 @@ class MovieSection extends StatelessWidget {
                   ),
                 ],
               ),
-              if (onSeeAll != null)
+              if (widget.onSeeAll != null)
                 TextButton(
-                  onPressed: onSeeAll,
+                  onPressed: widget.onSeeAll,
                   child: const Text(
                     'XEM TẤT CẢ',
                     style: TextStyle(
@@ -69,14 +118,15 @@ class MovieSection extends StatelessWidget {
         ),
         SizedBox(
           height: 250,
-          child: isLoading
+          child: widget.isLoading
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: movies.length,
+                  itemCount: widget.movies.length,
                   itemBuilder: (context, index) {
-                    final movie = movies[index];
+                    final movie = widget.movies[index];
+                    final isBookmarked = _localSavedSlugs.contains(movie.slug);
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: SizedBox(
@@ -88,15 +138,14 @@ class MovieSection extends StatelessWidget {
                               : 'https://picsum.photos/200/300',
                           year: movie.year.toString(),
                           genre: movie.type,
-                          isBookmarked: false,
-                          onBookmark: () {
-                            // Xử lý hành động bookmark
-                          },
+                          isBookmarked: isBookmarked,
+                          onBookmark: () => _toggleBookmark(movie),
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const MovieDetailScreen(),
+                                builder: (context) =>
+                                    MovieDetailScreen(slug: movie.slug),
                               ),
                             );
                           },

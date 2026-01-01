@@ -9,15 +9,15 @@ class Movie {
   final int year;
   final String posterUrl;
   final String thumbUrl;
-  final String webpPoster;
-  final String webpThumb;
   final String time;
   final String episodeCurrent;
+  final String episodeTotal;
   final String quality;
   final String lang;
   final List<String> category;
   final List<String> country;
-  final List<Episode> episodes;
+  final List<String> actor;
+  final List<EpisodeServer> episodes;
 
   Movie({
     required this.id,
@@ -30,22 +30,18 @@ class Movie {
     required this.year,
     required this.posterUrl,
     required this.thumbUrl,
-    required this.webpPoster,
-    required this.webpThumb,
     required this.time,
     required this.episodeCurrent,
+    required this.episodeTotal,
     required this.quality,
     required this.lang,
     required this.category,
     required this.country,
-    required this.episodes,
+    required this.actor,
+    this.episodes = const [],
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
-    // Helper to safely parse lists of objects or strings to just a list of names/slugs if needed.
-    // Based on server model, category is object list {id, name, slug}.
-    // For simple UI display we might just want the names.
-    
     List<String> parseListNames(dynamic listData) {
       if (listData == null) return [];
       if (listData is List) {
@@ -70,48 +66,52 @@ class Movie {
       year: json['year'] is int ? json['year'] : int.tryParse(json['year'].toString()) ?? 0,
       posterUrl: json['poster_url'] ?? '',
       thumbUrl: json['thumb_url'] ?? '',
-      webpPoster: json['webp_poster'] ?? '',
-      webpThumb: json['webp_thumb'] ?? '',
       time: json['time'] ?? '',
       episodeCurrent: json['episode_current'] ?? '',
+      episodeTotal: json['episode_total'] ?? '',
       quality: json['quality'] ?? '',
       lang: json['lang'] ?? '',
       category: parseListNames(json['category']),
       country: parseListNames(json['country']),
+      actor: (json['actor'] as List?)?.map((e) => e.toString()).toList() ?? [],
       episodes: (json['episodes'] as List<dynamic>?)
-          ?.map((episode) => Episode.fromJson(episode))
-          .toList() ?? [],
+              ?.where((e) => e is Map<String, dynamic>)
+              .map((e) => EpisodeServer.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          <EpisodeServer>[],
+    );
+  }
+}
+
+class EpisodeServer {
+  final String serverName;
+  final List<Episode> serverData;
+
+  EpisodeServer({
+    required this.serverName,
+    required this.serverData,
+  });
+
+  factory EpisodeServer.fromJson(Map<String, dynamic> json) {
+    return EpisodeServer(
+      serverName: json['server_name'] ?? '',
+      serverData: (json['server_data'] as List<dynamic>?)
+              ?.where((e) => e is Map<String, dynamic>)
+              .map((e) => Episode.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          <Episode>[],
     );
   }
 }
 
 class Episode {
-  final String serverName;
-  final List<ServerData> serverData;
-
-  Episode({
-    required this.serverName,
-    required this.serverData,
-  });
-
-  factory Episode.fromJson(Map<String, dynamic> json) {
-    return Episode(
-      serverName: json['server_name'] ?? '',
-      serverData: (json['server_data'] as List<dynamic>?)
-          ?.map((data) => ServerData.fromJson(data))
-          .toList() ?? [],
-    );
-  }
-}
-
-class ServerData {
   final String name;
   final String slug;
   final String filename;
   final String linkEmbed;
   final String linkM3u8;
 
-  ServerData({
+  Episode({
     required this.name,
     required this.slug,
     required this.filename,
@@ -119,8 +119,8 @@ class ServerData {
     required this.linkM3u8,
   });
 
-  factory ServerData.fromJson(Map<String, dynamic> json) {
-    return ServerData(
+  factory Episode.fromJson(Map<String, dynamic> json) {
+    return Episode(
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       filename: json['filename'] ?? '',

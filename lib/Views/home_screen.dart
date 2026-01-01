@@ -4,15 +4,15 @@ import '../Components/bottom_navbar.dart';
 import '../Components/home_app_bar.dart';
 import '../Components/movie_section.dart';
 import '../Components/movie_slide.dart';
-import '../models/user_model.dart';
 import '../models/movie_model.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/movie_service.dart';
+import '../services/saved_movie_service.dart';
 import 'bookmark_screen.dart';
 import 'movie_detail_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
-import 'watchrooms_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,11 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final AuthService _authService = AuthService();
   final MovieService _movieService = MovieService();
+  final SavedMovieService _savedMovieService = SavedMovieService();
   User? _user;
 
   List<Movie> _featuredMovies = [];
   List<Movie> _newMovies = [];
   List<Movie> _recommendedMovies = [];
+  Set<String> _savedMovieSlugs = {};
   bool _isLoading = true;
 
   @override
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'hanh-dong',
       limit: 10,
     );
+    final savedSlugs = await _savedMovieService.getSavedMovieSlugs();
 
     if (mounted) {
       setState(() {
@@ -56,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _featuredMovies = featured;
         _newMovies = newRelease;
         _recommendedMovies = recommended;
+        _savedMovieSlugs = savedSlugs;
         _isLoading = false;
       });
     }
@@ -113,23 +117,51 @@ class _HomeScreenState extends State<HomeScreen> {
                               (m) => {
                                 'title': m.name,
                                 'year': m.year.toString(),
-                                'genre': m.type, // or category name
+                                'genre': m.type,
                                 'image': m.posterUrl,
+                                'slug': m.slug,
                               },
                             )
                             .toList(),
-                        bookmarkedStates: List.filled(
-                          _featuredMovies.length,
-                          false,
-                        ),
-                        onBookmark: (index) {
-                          // Xử lý hành động bookmark
+                        bookmarkedStates: _featuredMovies
+                            .map((m) => _savedMovieSlugs.contains(m.slug))
+                            .toList(),
+                        onBookmark: (index) async {
+                          final movie = _featuredMovies[index];
+                          final slug = movie.slug;
+                          final wasSaved = _savedMovieSlugs.contains(slug);
+
+                          final result = await _savedMovieService
+                              .toggleBookmark(slug);
+                          if (result['success'] == true && mounted) {
+                            setState(() {
+                              if (wasSaved) {
+                                _savedMovieSlugs.remove(slug);
+                              } else {
+                                _savedMovieSlugs.add(slug);
+                              }
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  wasSaved
+                                      ? 'Đã xóa khỏi danh sách'
+                                      : 'Đã lưu phim',
+                                ),
+                                backgroundColor: wasSaved
+                                    ? Colors.orange
+                                    : const Color(0xFF5BA3F5),
+                              ),
+                            );
+                          }
                         },
                         onMovieTap: (index) {
+                          final slug = _featuredMovies[index].slug;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const MovieDetailScreen(),
+                              builder: (context) =>
+                                  MovieDetailScreen(slug: slug),
                             ),
                           );
                         },
@@ -143,9 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Tiếp tục xem',
                 movies: _newMovies,
                 isLoading: _isLoading,
-                onSeeAll: () {
-                  // Xử lý xem tất cả
-                },
+                savedMovieSlugs: _savedMovieSlugs,
+                onSeeAll: () {},
                 titleIcon: Icons.play_circle_outline,
               ),
             ),
@@ -156,6 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Phim mới ra mắt',
                 movies: _newMovies,
                 isLoading: _isLoading,
+                savedMovieSlugs: _savedMovieSlugs,
                 onSeeAll: () {},
               ),
             ),
@@ -166,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Top 10 tại Việt Nam',
                 movies: _recommendedMovies,
                 isLoading: _isLoading,
+                savedMovieSlugs: _savedMovieSlugs,
                 onSeeAll: () {},
               ),
             ),

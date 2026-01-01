@@ -412,7 +412,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
     if (_selectedMovie == null) return const SizedBox();
     
     // Nếu không có episodes data từ API, tạo episodes mặc định
-    List<ServerData> episodes = [];
+    List<Episode> episodes = [];
     
     if (_selectedMovie!.episodes.isNotEmpty && _selectedMovie!.episodes[0].serverData.isNotEmpty) {
       episodes = _selectedMovie!.episodes[0].serverData;
@@ -426,7 +426,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           if (parts.length == 2) {
             final totalEpisodes = int.tryParse(parts[1].replaceAll(RegExp(r'[^\d]'), '')) ?? 1;
             for (int i = 1; i <= totalEpisodes; i++) {
-              episodes.add(ServerData(
+              episodes.add(Episode(
                 name: 'Tập $i',
                 slug: 'tap-$i',
                 filename: 'tap-$i',
@@ -438,7 +438,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
         } else if (episodeCurrent.toLowerCase().contains('full') || 
                    episodeCurrent.toLowerCase().contains('hoàn tất')) {
           // Phim lẻ hoặc hoàn tất
-          episodes.add(ServerData(
+          episodes.add(Episode(
             name: 'Full',
             slug: 'full',
             filename: 'full',
@@ -447,7 +447,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           ));
         } else {
           // Trường hợp khác, tạo 1 tập mặc định
-          episodes.add(ServerData(
+          episodes.add(Episode(
             name: 'Tập 1',
             slug: 'tap-1',
             filename: 'tap-1',
@@ -457,7 +457,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
         }
       } else {
         // Không có thông tin, tạo tập mặc định
-        episodes.add(ServerData(
+        episodes.add(Episode(
           name: 'Tập 1',
           slug: 'tap-1',
           filename: 'tap-1',

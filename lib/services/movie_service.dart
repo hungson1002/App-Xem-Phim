@@ -96,8 +96,7 @@ class MovieService {
   // Search movies
   Future<List<Movie>> searchMovies(String query, {int page = 1, int limit = 20}) async {
     try {
-      final uri = Uri.parse(ApiConfig.searchMoviesUrl).replace(queryParameters: {
-        'q': query,
+      final uri = Uri.parse(ApiConfig.searchMoviesUrl(query)).replace(queryParameters: {
         'page': page.toString(),
         'limit': limit.toString(),
       });

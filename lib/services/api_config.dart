@@ -10,6 +10,7 @@ class ApiConfig {
   static const String userEndpoint = '/api/user';
   static const String commentEndpoint = '/api/comments';
   static const String movieEndpoint = '/api/movies';
+  static const String savedMovieEndpoint = '/api/saved-movies';
   
   // WebSocket URL for Socket.IO
   static const String socketUrl = 'http://10.0.0.64:4000';
@@ -42,9 +43,15 @@ class ApiConfig {
       '$baseUrl$movieEndpoint/country/$slug';
   static String getMoviesByYearUrl(int year) =>
       '$baseUrl$movieEndpoint/year/$year';
+  static String searchMoviesUrl(String query) =>
+      '$baseUrl$movieEndpoint?search=$query';
+
+  // SavedMovie endpoints
+  static String get savedMoviesUrl => '$baseUrl$savedMovieEndpoint';
+  static String removeSavedMovieUrl(String movieSlug) =>
+      '$baseUrl$savedMovieEndpoint/$movieSlug';
   static String getMovieDetailUrl(String slug) =>
       '$baseUrl$movieEndpoint/$slug';
-  static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

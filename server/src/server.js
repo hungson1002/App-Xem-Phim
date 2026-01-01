@@ -10,6 +10,7 @@ import CategoryRoute from './routes/Category.routes.js';
 import CountryRoute from './routes/Country.routes.js';
 import MovieRoute from './routes/Movie.routes.js';
 import WatchRoomRoute from './routes/watchRoom.routes.js';
+import SavedMovieRoute from './routes/SavedMovie.route.js';
 import socketService from './services/socketService.js';
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/categories', CategoryRoute);
 app.use('/api/countries', CountryRoute);
 app.use('/api/movies', MovieRoute);
 app.use('/api/watch-rooms', WatchRoomRoute);
+app.use('/api/saved-movies', SavedMovieRoute);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -17,10 +17,24 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
   final AuthService _authService = AuthService();
   String? _currentUserId;
 
+  String? _lastMessageId;
+
   @override
   void initState() {
     super.initState();
     _loadCurrentUser();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels <= 100 && // Near top threshold
+        !_scrollController.position.outOfRange) {
+      final provider = Provider.of<WatchRoomProvider>(context, listen: false);
+      if (provider.hasMoreChatHistory && !provider.isLoadingMoreChat) {
+        _loadMoreMessages(provider);
+      }
+    }
   }
 
   @override
@@ -37,15 +51,33 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     });
   }
 
-  void _sendMessage() {
-    final message = _messageController.text.trim();
-    if (message.isEmpty) return;
-
-    final provider = Provider.of<WatchRoomProvider>(context, listen: false);
-    provider.sendMessage(message);
-    _messageController.clear();
+  Future<void> _loadMoreMessages(WatchRoomProvider provider) async {
+    final oldMaxScroll = _scrollController.position.maxScrollExtent;
     
-    // Scroll to bottom
+    await provider.loadChatHistory(
+      provider.currentRoom!.roomId,
+      page: provider.chatPage + 1,
+    );
+
+    // Maintain scroll position is tricky with ListView normal order (top is 0).
+    // When items inserted at top (index 0), current items shift down.
+    // The scroll offset 0 stays 0, showing new items.
+    // We want to jump to (new items height).
+    // newItemsHeight approx = newMaxScroll - oldMaxScroll.
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        final newMaxScroll = _scrollController.position.maxScrollExtent;
+        final diff = newMaxScroll - oldMaxScroll;
+        if (diff > 0) {
+           // Jump to offset = diff to keep viewing the same item as before
+          _scrollController.jumpTo(_scrollController.offset + diff);
+        }
+      }
+    });
+  }
+
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -57,12 +89,36 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     });
   }
 
+  void _sendMessage() {
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+
+    final provider = Provider.of<WatchRoomProvider>(context, listen: false);
+    provider.sendMessage(message);
+    _messageController.clear();
+    // Scroll triggers automatically via listener
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Consumer<WatchRoomProvider>(
       builder: (context, provider, child) {
+        // Filter out system messages for UI
+        final visibleMessages = provider.messages
+            .where((m) => !m.isSystemMessage)
+            .toList();
+
+        // Auto scroll on new message (monitor raw messages for updates)
+        if (provider.messages.isNotEmpty) {
+          final lastMsg = provider.messages.last;
+          if (lastMsg.id != _lastMessageId) {
+            _lastMessageId = lastMsg.id;
+            _scrollToBottom();
+          }
+        }
+
         final room = provider.currentRoom;
         if (room == null) {
           return const Center(child: Text('Không có phòng'));
@@ -116,7 +172,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                     ),
                     const Spacer(),
                     Text(
-                      '${provider.messages.length} tin nhắn',
+                      '${visibleMessages.length} tin nhắn',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -128,7 +184,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
               
               // Messages list
               Expanded(
-                child: provider.messages.isEmpty
+                child: visibleMessages.isEmpty
                     ? const Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -150,9 +206,9 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(8),
-                        itemCount: provider.messages.length,
+                        itemCount: visibleMessages.length,
                         itemBuilder: (context, index) {
-                          final message = provider.messages[index];
+                          final message = visibleMessages[index];
                           return _buildMessageItem(message, provider);
                         },
                       ),
@@ -172,25 +228,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     final isSystemMessage = message.isSystemMessage;
     
     if (isSystemMessage) {
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              message.message,
-              style: const TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return Container(

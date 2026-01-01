@@ -302,11 +302,28 @@ class WatchRoomProvider with ChangeNotifier {
     }
   }
 
+  int _chatPage = 1;
+  int _chatTotalPages = 1;
+  bool _isLoadingMoreChat = false;
+
+  bool get hasMoreChatHistory => _chatPage < _chatTotalPages;
+  bool get isLoadingMoreChat => _isLoadingMoreChat;
+  int get chatPage => _chatPage;
+
   Future<void> loadChatHistory(String roomId, {int page = 1}) async {
+    if (page > 1) _isLoadingMoreChat = true;
+    notifyListeners();
+
     try {
       final result = await _watchRoomService.getChatHistory(roomId, page: page);
 
       if (result['success']) {
+        final pagination = result['pagination'];
+        if (pagination != null) {
+          _chatPage = pagination['current'];
+          _chatTotalPages = pagination['total'];
+        }
+
         if (page == 1) {
           _messages = result['messages'];
         } else {
@@ -316,6 +333,11 @@ class WatchRoomProvider with ChangeNotifier {
       }
     } catch (e) {
       // Silent fail for chat history
+    } finally {
+      if (page > 1) {
+        _isLoadingMoreChat = false;
+        notifyListeners(); // Validate state update
+      }
     }
   }
 
@@ -326,21 +348,21 @@ class WatchRoomProvider with ChangeNotifier {
     String? search,
   }) async {
     print(
-      '📋 Loading public rooms - page: $page, movieId: $movieId, search: $search',
+      'Loading public rooms - page: $page, movieId: $movieId, search: $search',
     );
     _setLoading(true);
     _clearError();
 
     try {
-      print('🌐 Calling watch room service...');
+      print('Calling watch room service...');
       final result = await _watchRoomService.getWatchRooms(
         page: page,
         movieId: movieId,
         search: search,
       );
 
-      print('📦 Result received: ${result['success']}');
-      print('📦 Rooms count: ${result['rooms']?.length ?? 0}');
+      print('Result received: ${result['success']}');
+      print('Rooms count: ${result['rooms']?.length ?? 0}');
 
       if (result['success']) {
         if (page == 1) {
@@ -348,14 +370,14 @@ class WatchRoomProvider with ChangeNotifier {
         } else {
           _publicRooms.addAll(result['rooms']);
         }
-        print('✅ Public rooms loaded: ${_publicRooms.length} rooms');
+        print('Public rooms loaded: ${_publicRooms.length} rooms');
         notifyListeners();
       } else {
-        print('❌ Failed to load rooms: ${result['message']}');
+        print('Failed to load rooms: ${result['message']}');
         _setError(result['message']);
       }
     } catch (e) {
-      print('❌ Exception loading public rooms: $e');
+      print(' Exception loading public rooms: $e');
       _setError('Lỗi khi tải danh sách phòng: $e');
     } finally {
       _setLoading(false);

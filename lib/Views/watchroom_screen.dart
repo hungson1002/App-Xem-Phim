@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/watch_room_provider.dart';
-import '../Components/watch_room_video_player.dart';
-import '../Components/watch_room_chat.dart';
+import '../Components/watchroom_video_player.dart';
+import '../Components/watchroom_chat.dart';
 import '../Components/watch_room_users.dart';
 
 class WatchRoomScreen extends StatefulWidget {

@@ -121,19 +121,19 @@ class SocketService {
 
     // Connection events
     _socket!.onConnect((_) {
-      print('✅ Socket connected');
+      print('Socket connected');
       _isConnected = true;
       _connectionController.add(true);
     });
 
     _socket!.onDisconnect((_) {
-      print('❌ Socket disconnected');
+      print('Socket disconnected');
       _isConnected = false;
       _connectionController.add(false);
     });
 
     _socket!.onConnectError((data) {
-      print('❌ Connection error: $data');
+      print('Connection error: $data');
       _errorController.add('Lỗi kết nối: $data');
     });
 

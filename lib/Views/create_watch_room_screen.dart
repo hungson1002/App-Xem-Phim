@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/watch_room_provider.dart';
 import '../models/movie_model.dart';
 import '../services/movie_service.dart';
-import 'watch_room_screen.dart';
+import 'watchroom_screen.dart';
 
 class CreateWatchRoomScreen extends StatefulWidget {
   final Movie? selectedMovie;

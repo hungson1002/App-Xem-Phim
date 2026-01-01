@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/watch_room_provider.dart';
 import '../models/watch_room_model.dart';
 import 'create_watch_room_screen.dart';
-import 'watch_room_screen.dart';
+import 'watchroom_screen.dart';
 
 class WatchRoomsScreen extends StatefulWidget {
   const WatchRoomsScreen({super.key});

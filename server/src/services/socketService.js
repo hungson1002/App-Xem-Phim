@@ -189,7 +189,8 @@ class SocketService {
                 userCount: room.currentUsers.length
             });
 
-            // Send system message
+            // Send system message - DISABLED to prevent spam
+            /*
             const systemMessage = new ChatMessage({
                 roomId,
                 userId: socket.userId,
@@ -200,6 +201,7 @@ class SocketService {
             await systemMessage.save();
 
             this.io.to(roomId).emit('new-message', systemMessage);
+            */
 
         } catch (error) {
             console.error('Join room error:', error);
@@ -408,6 +410,8 @@ class SocketService {
             });
 
             // System message
+            // System message - DISABLED
+            /*
             if (room.currentUsers.length > 0) {
                 const systemMessage = new ChatMessage({
                     roomId,
@@ -419,6 +423,7 @@ class SocketService {
                 await systemMessage.save();
                 this.io.to(roomId).emit('new-message', systemMessage);
             }
+            */
 
         } catch (error) {
             console.error('Remove user from room error:', error);

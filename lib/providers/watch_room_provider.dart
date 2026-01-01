@@ -37,15 +37,7 @@ class WatchRoomProvider with ChangeNotifier {
   StreamSubscription? _errorSubscription;
 
   // Getters
-  WatchRoom? get currentRoom {
-    print('🏠 Getting currentRoom: $_currentRoom');
-    print('📺 Episode info in currentRoom: ${_currentRoom?.episodeInfo}');
-    if (_currentRoom?.episodeInfo != null) {
-      print('📺 Episode linkM3u8: ${_currentRoom!.episodeInfo!.linkM3u8}');
-      print('📺 Episode linkEmbed: ${_currentRoom!.episodeInfo!.linkEmbed}');
-    }
-    return _currentRoom;
-  }
+  WatchRoom? get currentRoom => _currentRoom;
 
   List<ChatMessage> get messages => _messages;
   List<WatchRoom> get publicRooms => _publicRooms;
@@ -224,49 +216,38 @@ class WatchRoomProvider with ChangeNotifier {
     _clearError();
 
     try {
-      print('🚪 Joining room: $roomId');
-      // Get room info first
       final result = await _watchRoomService.getWatchRoom(roomId);
 
-      print('🏠 Room result: $result');
-
       if (result['success']) {
-        // Set current room data
         _currentRoom = result['room'];
         notifyListeners();
 
-        print('✅ Room set: ${_currentRoom?.title}');
-        print('📺 Episode info: ${result['episode']}');
-
-        // Connect socket if not connected
-        if (!_isConnected) {
+        if (!_socketService.isConnected) {
           await connectSocket();
         }
 
-        // Join room via socket
         _socketService.joinRoom(roomId, password: password);
-
-        // Load chat history
         await loadChatHistory(roomId);
       } else {
         _setError(result['message']);
       }
     } catch (e) {
-      print('❌ Join room error: $e');
       _setError('Lỗi khi tham gia phòng: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  void leaveRoom() {
+  void leaveRoom({bool notify = true}) {
     if (_currentRoom != null) {
       _socketService.leaveRoom(_currentRoom!.roomId);
       _currentRoom = null;
       _messages.clear();
       _currentTime = 0;
       _isPlaying = false;
-      notifyListeners();
+      if (notify) {
+        notifyListeners();
+      }
     }
   }
 
@@ -323,10 +304,7 @@ class WatchRoomProvider with ChangeNotifier {
 
   Future<void> loadChatHistory(String roomId, {int page = 1}) async {
     try {
-      print('🔄 Loading chat history for room: $roomId');
       final result = await _watchRoomService.getChatHistory(roomId, page: page);
-
-      print('📨 Chat history result: $result');
 
       if (result['success']) {
         if (page == 1) {
@@ -334,13 +312,10 @@ class WatchRoomProvider with ChangeNotifier {
         } else {
           _messages.insertAll(0, result['messages']);
         }
-        print('💬 Loaded ${_messages.length} messages');
         notifyListeners();
-      } else {
-        print('❌ Failed to load chat history: ${result['message']}');
       }
     } catch (e) {
-      print('Error loading chat history: $e');
+      // Silent fail for chat history
     }
   }
 
@@ -350,15 +325,22 @@ class WatchRoomProvider with ChangeNotifier {
     String? movieId,
     String? search,
   }) async {
+    print(
+      '📋 Loading public rooms - page: $page, movieId: $movieId, search: $search',
+    );
     _setLoading(true);
     _clearError();
 
     try {
+      print('🌐 Calling watch room service...');
       final result = await _watchRoomService.getWatchRooms(
         page: page,
         movieId: movieId,
         search: search,
       );
+
+      print('📦 Result received: ${result['success']}');
+      print('📦 Rooms count: ${result['rooms']?.length ?? 0}');
 
       if (result['success']) {
         if (page == 1) {
@@ -366,11 +348,14 @@ class WatchRoomProvider with ChangeNotifier {
         } else {
           _publicRooms.addAll(result['rooms']);
         }
+        print('✅ Public rooms loaded: ${_publicRooms.length} rooms');
         notifyListeners();
       } else {
+        print('❌ Failed to load rooms: ${result['message']}');
         _setError(result['message']);
       }
     } catch (e) {
+      print('❌ Exception loading public rooms: $e');
       _setError('Lỗi khi tải danh sách phòng: $e');
     } finally {
       _setLoading(false);

@@ -114,7 +114,6 @@ class WatchRoomService {
   // Lấy thông tin chi tiết phòng xem
   Future<Map<String, dynamic>> getWatchRoom(String roomId) async {
     try {
-      print('🔄 Getting watch room: $roomId');
       final headers = await _getHeaders();
 
       final response = await http.get(
@@ -124,14 +123,10 @@ class WatchRoomService {
 
       final data = jsonDecode(response.body);
 
-      print('📡 Watch room response: ${response.statusCode}');
-      print('📡 Watch room data: $data');
-
       if (response.statusCode == 200) {
         final roomData = data['data']['room'];
         final episodeData = data['data']['episode'];
 
-        // Gộp episode data vào room data
         if (episodeData != null) {
           roomData['episode'] = episodeData;
         }
@@ -149,7 +144,6 @@ class WatchRoomService {
         };
       }
     } catch (e) {
-      print('❌ Get watch room error: $e');
       return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }
@@ -224,7 +218,6 @@ class WatchRoomService {
     int limit = 50,
   }) async {
     try {
-      print('🔄 Getting chat history for room: $roomId');
       final headers = await _getHeaders();
       final queryParams = {'page': page.toString(), 'limit': limit.toString()};
 
@@ -232,13 +225,8 @@ class WatchRoomService {
         '${ApiConfig.baseUrl}/api/watch-rooms/$roomId/chat',
       ).replace(queryParameters: queryParams);
 
-      print('📡 Chat history URL: $uri');
-
       final response = await http.get(uri, headers: headers);
       final data = jsonDecode(response.body);
-
-      print('📨 Chat history response: ${response.statusCode}');
-      print('📨 Chat history data: $data');
 
       if (response.statusCode == 200) {
         final messages = (data['data']['messages'] as List)
@@ -257,7 +245,6 @@ class WatchRoomService {
         };
       }
     } catch (e) {
-      print('❌ Chat history error: $e');
       return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }

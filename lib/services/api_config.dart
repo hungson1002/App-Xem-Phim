@@ -3,14 +3,16 @@
 class ApiConfig {
   // Base URL for the backend API
   // Web: dùng IP thực của máy
-  // Android Emulator: dùng 10.0.2.2 thay cho localhost
-  static const String baseUrl = 'http://10.0.4.1:4000';
+  static const String baseUrl = 'http://10.0.0.64:4000';
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
   static const String userEndpoint = '/api/user';
   static const String commentEndpoint = '/api/comments';
   static const String movieEndpoint = '/api/movies';
+  
+  // WebSocket URL for Socket.IO
+  static const String socketUrl = 'http://10.0.0.64:4000';
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';
@@ -32,11 +34,16 @@ class ApiConfig {
   static String get addCommentUrl => '$baseUrl$commentEndpoint/add';
 
   // Movie endpoints
-  static String getMoviesLimitUrl(int limit) => '$baseUrl$movieEndpoint/limit/$limit';
-  static String getMoviesByCategoryUrl(String slug) => '$baseUrl$movieEndpoint/category/$slug';
-  static String getMoviesByCountryUrl(String slug) => '$baseUrl$movieEndpoint/country/$slug';
-  static String getMoviesByYearUrl(int year) => '$baseUrl$movieEndpoint/year/$year';
-  static String getMovieDetailUrl(String slug) => '$baseUrl$movieEndpoint/$slug';
+  static String getMoviesLimitUrl(int limit) =>
+      '$baseUrl$movieEndpoint/limit/$limit';
+  static String getMoviesByCategoryUrl(String slug) =>
+      '$baseUrl$movieEndpoint/category/$slug';
+  static String getMoviesByCountryUrl(String slug) =>
+      '$baseUrl$movieEndpoint/country/$slug';
+  static String getMoviesByYearUrl(int year) =>
+      '$baseUrl$movieEndpoint/year/$year';
+  static String getMovieDetailUrl(String slug) =>
+      '$baseUrl$movieEndpoint/$slug';
   static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
 
   // Request timeout

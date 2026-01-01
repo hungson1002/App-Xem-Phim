@@ -197,21 +197,13 @@ export const getWatchRoom = async (req, res) => {
 
         // Lấy thông tin episode
         const movie = await Movie.findOne({ _id: room.movieId });
-        console.log('🎬 Movie found:', movie?.name);
-        console.log('📺 Movie episodes:', movie?.episodes?.length || 0);
-        console.log('🔍 Looking for episode slug:', room.episodeSlug);
-
         let episode = null;
         if (movie && movie.episodes && movie.episodes.length > 0) {
             for (const episodeGroup of movie.episodes) {
-                console.log('📺 Episode group:', episodeGroup.server_name);
-                console.log('📺 Server data count:', episodeGroup.server_data?.length || 0);
-
                 if (episodeGroup.server_data) {
                     const foundEpisode = episodeGroup.server_data.find(ep => ep.slug === room.episodeSlug);
                     if (foundEpisode) {
                         episode = foundEpisode;
-                        console.log('✅ Episode found:', foundEpisode);
                         break;
                     }
                 }
@@ -219,7 +211,6 @@ export const getWatchRoom = async (req, res) => {
         }
 
         if (!episode) {
-            console.log('❌ Episode not found, creating mock data');
             episode = {
                 name: room.episodeSlug,
                 slug: room.episodeSlug,

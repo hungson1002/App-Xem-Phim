@@ -65,7 +65,8 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
     setState(() => _isSearching = true);
     
     try {
-      final results = await _movieService.searchMovies(query);
+      // Increased limit to 100 for more search results
+      final results = await _movieService.searchMovies(query, limit: 100);
       setState(() {
         _searchResults = results;
         _isSearching = false;

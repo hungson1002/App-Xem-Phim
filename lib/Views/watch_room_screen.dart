@@ -22,6 +22,7 @@ class WatchRoomScreen extends StatefulWidget {
 class _WatchRoomScreenState extends State<WatchRoomScreen> {
   bool _showChat = true;
   bool _showUsers = false;
+  WatchRoomProvider? _provider;
 
   @override
   void initState() {
@@ -33,9 +34,17 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Store provider reference safely for use in dispose()
+    _provider = Provider.of<WatchRoomProvider>(context, listen: false);
+  }
+
+  @override
   void dispose() {
-    final provider = Provider.of<WatchRoomProvider>(context, listen: false);
-    provider.leaveRoom();
+    // Use stored reference instead of looking up provider
+    // Call leaveRoom silently to avoid triggering rebuilds during dispose
+    _provider?.leaveRoom(notify: false);
     super.dispose();
   }
 

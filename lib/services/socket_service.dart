@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/watch_room_model.dart';
 import '../models/chat_message_model.dart';
 import 'auth_service.dart';
@@ -11,34 +10,51 @@ class SocketService {
   factory SocketService() => _instance;
   SocketService._internal();
 
-  WebSocket? _socket;
+  IO.Socket? _socket;
   bool _isConnected = false;
   String? _currentRoomId;
 
   // Stream controllers
-  final StreamController<bool> _connectionController = StreamController<bool>.broadcast();
-  final StreamController<WatchRoom> _roomJoinedController = StreamController<WatchRoom>.broadcast();
-  final StreamController<Map<String, dynamic>> _userJoinedController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _userLeftController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _videoStateController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _videoSeekedController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<ChatMessage> _newMessageController = StreamController<ChatMessage>.broadcast();
-  final StreamController<Map<String, dynamic>> _reactionUpdatedController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _syncResponseController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _hostChangedController = StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<String> _errorController = StreamController<String>.broadcast();
+  final StreamController<bool> _connectionController =
+      StreamController<bool>.broadcast();
+  final StreamController<WatchRoom> _roomJoinedController =
+      StreamController<WatchRoom>.broadcast();
+  final StreamController<Map<String, dynamic>> _userJoinedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _userLeftController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _videoStateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _videoSeekedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<ChatMessage> _newMessageController =
+      StreamController<ChatMessage>.broadcast();
+  final StreamController<Map<String, dynamic>> _reactionUpdatedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _syncResponseController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _hostChangedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<String> _errorController =
+      StreamController<String>.broadcast();
 
   // Getters for streams
   Stream<bool> get connectionStream => _connectionController.stream;
   Stream<WatchRoom> get roomJoinedStream => _roomJoinedController.stream;
-  Stream<Map<String, dynamic>> get userJoinedStream => _userJoinedController.stream;
+  Stream<Map<String, dynamic>> get userJoinedStream =>
+      _userJoinedController.stream;
   Stream<Map<String, dynamic>> get userLeftStream => _userLeftController.stream;
-  Stream<Map<String, dynamic>> get videoStateStream => _videoStateController.stream;
-  Stream<Map<String, dynamic>> get videoSeekedStream => _videoSeekedController.stream;
+  Stream<Map<String, dynamic>> get videoStateStream =>
+      _videoStateController.stream;
+  Stream<Map<String, dynamic>> get videoSeekedStream =>
+      _videoSeekedController.stream;
   Stream<ChatMessage> get newMessageStream => _newMessageController.stream;
-  Stream<Map<String, dynamic>> get reactionUpdatedStream => _reactionUpdatedController.stream;
-  Stream<Map<String, dynamic>> get syncResponseStream => _syncResponseController.stream;
-  Stream<Map<String, dynamic>> get hostChangedStream => _hostChangedController.stream;
+  Stream<Map<String, dynamic>> get reactionUpdatedStream =>
+      _reactionUpdatedController.stream;
+  Stream<Map<String, dynamic>> get syncResponseStream =>
+      _syncResponseController.stream;
+  Stream<Map<String, dynamic>> get hostChangedStream =>
+      _hostChangedController.stream;
   Stream<String> get errorStream => _errorController.stream;
 
   bool get isConnected => _isConnected;
@@ -53,169 +69,221 @@ class SocketService {
         throw Exception('No authentication token found');
       }
 
-      // For demo purposes, we'll simulate socket connection
-      // In real implementation, you would use actual WebSocket
-      await Future.delayed(const Duration(seconds: 1));
+      _socket = IO.io(
+        ApiConfig.socketUrl,
+        IO.OptionBuilder()
+            .setTransports(['websocket'])
+            .disableAutoConnect()
+            .setAuth({'token': token})
+            .build(),
+      );
+
+      _setupEventListeners();
       
+      // Connect and wait for connection with timeout
+      final completer = Completer<void>();
+      Timer? timeoutTimer;
+      
+      _socket!.onConnect((_) {
+        timeoutTimer?.cancel();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      });
+      
+      _socket!.onConnectError((error) {
+        timeoutTimer?.cancel();
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
+      });
+      
+      timeoutTimer = Timer(const Duration(seconds: 10), () {
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Connection timeout'));
+        }
+      });
+      
+      _socket!.connect();
+      await completer.future;
+
       _isConnected = true;
       _connectionController.add(true);
-      
     } catch (e) {
-      print('Socket connection error: $e');
       _errorController.add('Lỗi kết nối: $e');
+      _isConnected = false;
+      _connectionController.add(false);
     }
+  }
+
+  void _setupEventListeners() {
+    if (_socket == null) return;
+
+    // Connection events
+    _socket!.onConnect((_) {
+      print('✅ Socket connected');
+      _isConnected = true;
+      _connectionController.add(true);
+    });
+
+    _socket!.onDisconnect((_) {
+      print('❌ Socket disconnected');
+      _isConnected = false;
+      _connectionController.add(false);
+    });
+
+    _socket!.onConnectError((data) {
+      print('❌ Connection error: $data');
+      _errorController.add('Lỗi kết nối: $data');
+    });
+
+    // Room events
+    _socket!.on('room-joined', (data) {
+      try {
+        // Backend sends: {room: {...}, videoState: {...}, userCount: N}
+        if (data is Map) {
+          final roomData = data['room'];
+          if (roomData != null) {
+            final room = WatchRoom.fromJson(roomData);
+            _roomJoinedController.add(room);
+          }
+        }
+      } catch (e) {
+        print('Error parsing room-joined: $e');
+      }
+    });
+
+    _socket!.on('user-joined', (data) {
+      _userJoinedController.add(Map<String, dynamic>.from(data));
+    });
+
+    _socket!.on('user-left', (data) {
+      _userLeftController.add(Map<String, dynamic>.from(data));
+    });
+
+    // Video events
+    _socket!.on('video-state-changed', (data) {
+      _videoStateController.add(Map<String, dynamic>.from(data));
+    });
+
+    _socket!.on('video-seeked', (data) {
+      _videoSeekedController.add({
+        'currentTime': data['currentTime'],
+        'updatedBy': data['updatedBy'],
+        'timestamp': data['timestamp'],
+      });
+    });
+
+    // Chat events
+    _socket!.on('new-message', (data) {
+      try {
+        final message = ChatMessage.fromJson(data);
+        _newMessageController.add(message);
+      } catch (e) {
+        print('Error parsing new-message: $e');
+      }
+    });
+
+    _socket!.on('reaction-updated', (data) {
+      _reactionUpdatedController.add(Map<String, dynamic>.from(data));
+    });
+
+    // Sync events
+    _socket!.on('sync-response', (data) {
+      _syncResponseController.add(Map<String, dynamic>.from(data));
+    });
+
+    // Host events
+    _socket!.on('host-changed', (data) {
+      _hostChangedController.add(Map<String, dynamic>.from(data));
+    });
+
+    // Error events
+    _socket!.on('error', (data) {
+      _errorController.add(data['message'] ?? 'Unknown error');
+    });
   }
 
   // Room methods
   void joinRoom(String roomId, {String? password}) {
-    if (!_isConnected) {
+    if (!_isConnected || _socket == null) {
       _errorController.add('Chưa kết nối đến server');
       return;
     }
 
     _currentRoomId = roomId;
-    
-    // Simulate joining room
-    Future.delayed(const Duration(milliseconds: 500), () {
-      // Mock room data
-      final mockRoom = WatchRoom(
-        id: 'mock_id',
-        roomId: roomId,
-        movieId: 'mock_movie_id',
-        episodeSlug: 'tap-1',
-        hostId: 'mock_host_id',
-        title: 'Phòng xem demo',
-        description: 'Đây là phòng demo',
-        isPrivate: false,
-        maxUsers: 50,
-        currentUsers: [],
-        videoState: VideoState(
-          currentTime: 0,
-          isPlaying: false,
-          lastUpdated: DateTime.now(),
-        ),
-        settings: RoomSettings(
-          allowChat: true,
-          allowUserControl: false,
-          syncTolerance: 2,
-        ),
-        status: 'active',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      
-      _roomJoinedController.add(mockRoom);
+    _socket!.emit('join-room', {
+      'roomId': roomId,
+      if (password != null) 'password': password,
     });
   }
 
   void leaveRoom(String roomId) {
-    if (!_isConnected) return;
+    if (!_isConnected || _socket == null) return;
+    
+    _socket!.emit('leave-room', {'roomId': roomId});
     _currentRoomId = null;
   }
 
   // Video control methods
   void playVideo(String roomId, double currentTime) {
-    if (!_isConnected) return;
-    
-    // Simulate video state change
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _videoStateController.add({
-        'action': 'play',
-        'currentTime': currentTime,
-        'isPlaying': true,
-        'updatedBy': 'You',
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('video-play', {
+      'roomId': roomId,
+      'currentTime': currentTime,
     });
   }
 
   void pauseVideo(String roomId, double currentTime) {
-    if (!_isConnected) return;
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _videoStateController.add({
-        'action': 'pause',
-        'currentTime': currentTime,
-        'isPlaying': false,
-        'updatedBy': 'You',
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('video-pause', {
+      'roomId': roomId,
+      'currentTime': currentTime,
     });
   }
 
   void seekVideo(String roomId, double currentTime) {
-    if (!_isConnected) return;
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _videoSeekedController.add({
-        'currentTime': currentTime,
-        'updatedBy': 'You',
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('video-seek', {
+      'roomId': roomId,
+      'currentTime': currentTime,
     });
   }
 
   void requestSync(String roomId) {
-    if (!_isConnected) return;
-    
-    Future.delayed(const Duration(milliseconds: 200), () {
-      _syncResponseController.add({
-        'videoState': {
-          'currentTime': 120.0,
-          'isPlaying': true,
-          'lastUpdated': DateTime.now().toIso8601String(),
-        },
-        'serverTime': DateTime.now().millisecondsSinceEpoch,
-      });
-    });
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('request-sync', {'roomId': roomId});
   }
 
   // Chat methods
   void sendMessage(String roomId, String message, {double videoTimestamp = 0}) {
-    if (!_isConnected) return;
+    if (!_isConnected || _socket == null) return;
 
-    // Simulate message sent
-    Future.delayed(const Duration(milliseconds: 100), () {
-      final mockMessage = ChatMessage(
-        id: 'mock_${DateTime.now().millisecondsSinceEpoch}',
-        roomId: roomId,
-        userId: 'current_user_id',
-        username: 'You',
-        avatar: '',
-        message: message,
-        type: 'message',
-        videoTimestamp: videoTimestamp,
-        reactions: [],
-        isDeleted: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      
-      _newMessageController.add(mockMessage);
+    _socket!.emit('send-message', {
+      'roomId': roomId,
+      'message': message,
+      'videoTimestamp': videoTimestamp,
     });
   }
 
   void addReaction(String messageId, String emoji) {
-    if (!_isConnected) return;
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _reactionUpdatedController.add({
-        'messageId': messageId,
-        'reactions': [
-          {
-            'userId': 'current_user_id',
-            'emoji': emoji,
-            'createdAt': DateTime.now().toIso8601String(),
-          }
-        ],
-      });
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('add-reaction', {
+      'messageId': messageId,
+      'emoji': emoji,
     });
   }
 
   // Disconnect
   void disconnect() {
     if (_socket != null) {
-      _socket!.close();
+      _socket!.disconnect();
+      _socket!.dispose();
       _socket = null;
     }
     _isConnected = false;

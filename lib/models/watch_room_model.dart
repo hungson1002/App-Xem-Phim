@@ -40,12 +40,20 @@ class WatchRoom {
   });
 
   factory WatchRoom.fromJson(Map<String, dynamic> json) {
+    // Helper to extract ID from String or Object or Null
+    String getId(dynamic val) {
+      if (val == null) return '';
+      if (val is String) return val;
+      if (val is Map) return val['_id'] ?? '';
+      return '';
+    }
+
     return WatchRoom(
       id: json['_id'] ?? '',
       roomId: json['roomId'] ?? '',
-      movieId: json['movieId'] is String ? json['movieId'] : json['movieId']['_id'] ?? '',
+      movieId: getId(json['movieId']),
       episodeSlug: json['episodeSlug'] ?? '',
-      hostId: json['hostId'] is String ? json['hostId'] : json['hostId']['_id'] ?? '',
+      hostId: getId(json['hostId']),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       isPrivate: json['isPrivate'] ?? false,
@@ -110,8 +118,18 @@ class RoomUser {
   });
 
   factory RoomUser.fromJson(Map<String, dynamic> json) {
+    // Handle userId which can be String, Object with _id, or null
+    String userId = '';
+    if (json['userId'] != null) {
+      if (json['userId'] is String) {
+        userId = json['userId'];
+      } else if (json['userId'] is Map && json['userId']['_id'] != null) {
+        userId = json['userId']['_id'];
+      }
+    }
+    
     return RoomUser(
-      userId: json['userId'] is String ? json['userId'] : json['userId']['_id'] ?? '',
+      userId: userId,
       username: json['username'] ?? '',
       avatar: json['avatar'] ?? '',
       joinedAt: DateTime.parse(json['joinedAt'] ?? DateTime.now().toIso8601String()),

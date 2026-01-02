@@ -1,0 +1,99 @@
+{
+  "status": true,
+  "msg": "done",
+  "movie": {
+    "tmdb": {
+      "type": "movie",
+      "id": "1404326",
+      "season": null,
+      "vote_average": 6,
+      "vote_count": 5
+    },
+    "imdb": {
+      "id": null
+    },
+    "created": {
+      "time": "2025-12-26T14:22:37.000Z"
+    },
+    "modified": {
+      "time": "2025-12-26T14:58:02.000Z"
+    },
+    "_id": "09bd2862fe3035ad3223816b439045e3",
+    "name": "366 Ngày",
+    "slug": "366-ngay",
+    "origin_name": "366 Days",
+    "content": "Năm 2003, Miu — một nữ sinh trung học ở Okinawa — bắt đầu để ý đến Minato, đàn anh vừa mất cả cha lẫn mẹ. Để động viên anh, cô cùng anh trao đổi những băng nhạc mix trên MiniDisc. Khi Minato tốt nghiệp và chuyển lên Tokyo, họ bước vào mối quan hệ yêu xa, và sau đó Miu cũng lên Tokyo học đại học để ở bên anh. Vài năm sau, trong lúc Miu chật vật tìm việc, Minato bất ngờ chia tay cô, khiến Miu quay về Okinawa. Mười lăm năm trôi qua, vào năm 2024, Miu đã kết hôn với người bạn thanh mai trúc mã Ryusei và đang mang bệnh nan y. Con gái cô, Himari, được gửi đến Tokyo để trao một thông điệp được lưu trong chiếc MiniDisc cho người đàn ông mà mẹ cô từng yêu.",
+    "type": "single",
+    "status": "completed",
+    "poster_url": "https://phimimg.com/upload/vod/20251226-1/c5ba6b32fac5c2a890b4dbf4ca78b7f5.jpg",
+    "thumb_url": "https://phimimg.com/upload/vod/20251226-1/6c8c4dd7e4ae99bd080e1d908b39ba64.jpg",
+    "is_copyright": false,
+    "sub_docquyen": false,
+    "chieurap": false,
+    "trailer_url": "https://www.youtube.com/watch?v=xHw4xcdgWSs",
+    "time": "123 phút",
+    "episode_current": "Full",
+    "episode_total": "1",
+    "quality": "FHD",
+    "lang": "Vietsub",
+    "notify": "",
+    "showtimes": "",
+    "year": 2025,
+    "view": 0,
+    "actor": [
+      "Eiji Akaso",
+      "Moka Kamishiraishi",
+      "Yuto Nakajima",
+      "Tina Tamashiro",
+      "Junpei Mizobata",
+      "Kurumi Inagaki",
+      "Jun Saito",
+      "Ryoko Kuninaka",
+      "Hikari Ishida",
+      "Tetta Sugimoto"
+    ],
+    "director": [
+      "Takehiko Shinjo"
+    ],
+    "category": [
+      {
+        "id": "37a7b38b6184a5ebd3c43015aa20709d",
+        "name": "Chính Kịch",
+        "slug": "chinh-kich"
+      },
+      {
+        "id": "bb2b4b030608ca5984c8dd0770f5b40b",
+        "name": "Tình Cảm",
+        "slug": "tinh-cam"
+      },
+      {
+        "id": "a7b065b92ad356387ef2e075dee66529",
+        "name": "Tâm Lý",
+        "slug": "tam-ly"
+      }
+    ],
+    "country": [
+      {
+        "id": "d4097fbffa8f7149a61281437171eb83",
+        "name": "Nhật Bản",
+        "slug": "nhat-ban"
+      }
+    ],
+    "webp_poster": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251226-1/c5ba6b32fac5c2a890b4dbf4ca78b7f5.jpg",
+    "webp_thumb": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251226-1/6c8c4dd7e4ae99bd080e1d908b39ba64.jpg"
+  },
+  "episodes": [
+    {
+      "server_name": "#Hà Nội (Vietsub)",
+      "server_data": [
+        {
+          "name": "Full",
+          "slug": "full",
+          "filename": "366 Ngày - 366 Days - 2025 - 1080p - Vietsub - Full",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251226/5TFaXNnY/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251226/5TFaXNnY/index.m3u8"
+        }
+      ]
+    }
+  ]
+}

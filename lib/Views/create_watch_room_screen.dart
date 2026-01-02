@@ -24,12 +24,12 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   Movie? _selectedMovie;
   String? _selectedEpisodeSlug;
   bool _isPrivate = false;
   bool _isLoading = false;
-  
+
   List<Movie> _searchResults = [];
   bool _isSearching = false;
   final MovieService _movieService = MovieService();
@@ -39,7 +39,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
     super.initState();
     _selectedMovie = widget.selectedMovie;
     _selectedEpisodeSlug = widget.selectedEpisodeSlug;
-    
+
     if (_selectedMovie != null) {
       _titleController.text = '${_selectedMovie!.name} - Xem cùng nhau';
     }
@@ -63,7 +63,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
     }
 
     setState(() => _isSearching = true);
-    
+
     try {
       // Increased limit to 100 for more search results
       final results = await _movieService.searchMovies(query, limit: 100);
@@ -74,9 +74,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
     } catch (e) {
       setState(() => _isSearching = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tìm kiếm: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi tìm kiếm: $e')));
       }
     }
   }
@@ -84,22 +84,22 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
   Future<void> _createRoom() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedMovie == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn phim')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn phim')));
       return;
     }
     if (_selectedEpisodeSlug == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn tập phim')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn tập phim')));
       return;
     }
 
     setState(() => _isLoading = true);
 
     final provider = Provider.of<WatchRoomProvider>(context, listen: false);
-    
+
     final success = await provider.createRoom(
       movieId: _selectedMovie!.id,
       episodeSlug: _selectedEpisodeSlug!,
@@ -117,9 +117,8 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => WatchRoomScreen(
-            roomId: provider.currentRoom!.roomId,
-          ),
+          builder: (context) =>
+              WatchRoomScreen(roomId: provider.currentRoom!.roomId),
         ),
       );
     } else {
@@ -135,9 +134,11 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B0E13) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark
+          ? const Color(0xFF0B0E13)
+          : const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('Tạo phòng xem'),
         backgroundColor: Colors.transparent,
@@ -155,14 +156,14 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                   children: [
                     // Movie selection
                     _buildMovieSelection(),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Episode selection
                     if (_selectedMovie != null) _buildEpisodeSelection(),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Room title
                     TextFormField(
                       controller: _titleController,
@@ -181,9 +182,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Description
                     TextFormField(
                       controller: _descriptionController,
@@ -197,9 +198,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                       ),
                       maxLines: 3,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Private room toggle
                     SwitchListTile(
                       title: const Text('Phòng riêng tư'),
@@ -209,7 +210,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                         setState(() => _isPrivate = value);
                       },
                     ),
-                    
+
                     // Password field
                     if (_isPrivate) ...[
                       const SizedBox(height: 16),
@@ -225,21 +226,24 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                         ),
                         obscureText: true,
                         validator: (value) {
-                          if (_isPrivate && (value == null || value.trim().isEmpty)) {
+                          if (_isPrivate &&
+                              (value == null || value.trim().isEmpty)) {
                             return 'Vui lòng nhập mật khẩu';
                           }
                           return null;
                         },
                       ),
                     ],
-                    
-                    const SizedBox(height: 100), // Extra space để đảm bảo có thể scroll
+
+                    const SizedBox(
+                      height: 100,
+                    ), // Extra space để đảm bảo có thể scroll
                   ],
                 ),
               ),
             ),
           ),
-          
+
           // Fixed bottom button
           Container(
             padding: const EdgeInsets.all(16),
@@ -262,10 +266,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator()
-                    : const Text(
-                        'Tạo phòng',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                    : const Text('Tạo phòng', style: TextStyle(fontSize: 16)),
               ),
             ),
           ),
@@ -276,7 +277,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
 
   Widget _buildMovieSelection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -284,9 +285,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           'Chọn phim',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         if (_selectedMovie != null)
           Card(
             color: isDark ? Colors.grey[850] : Colors.white,
@@ -334,7 +335,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
             ),
             onChanged: _searchMovies,
           ),
-        
+
         // Search results
         if (_isSearching)
           const Padding(
@@ -343,7 +344,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           )
         else if (_searchResults.isNotEmpty && _selectedMovie == null)
           Container(
-            constraints: const BoxConstraints(maxHeight: 250), // Giới hạn chiều cao
+            constraints: const BoxConstraints(
+              maxHeight: 250,
+            ), // Giới hạn chiều cao
             margin: const EdgeInsets.only(top: 8),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey[300]!),
@@ -384,14 +387,16 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                       _selectedMovie = movie;
                       _searchResults = [];
                       _titleController.text = '${movie.name} - Xem cùng nhau';
-                      
+
                       // Tự động chọn tập đầu tiên
-                      if (movie.episodes.isNotEmpty && movie.episodes[0].serverData.isNotEmpty) {
-                        _selectedEpisodeSlug = movie.episodes[0].serverData[0].slug;
+                      if (movie.episodes.isNotEmpty &&
+                          movie.episodes[0].serverData.isNotEmpty) {
+                        _selectedEpisodeSlug =
+                            movie.episodes[0].serverData[0].slug;
                       } else {
                         // Tạo episode mặc định dựa trên episode_current
                         final episodeCurrent = movie.episodeCurrent;
-                        if (episodeCurrent.toLowerCase().contains('full') || 
+                        if (episodeCurrent.toLowerCase().contains('full') ||
                             episodeCurrent.toLowerCase().contains('hoàn tất')) {
                           _selectedEpisodeSlug = 'full';
                         } else {
@@ -410,11 +415,12 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
 
   Widget _buildEpisodeSelection() {
     if (_selectedMovie == null) return const SizedBox();
-    
+
     // Nếu không có episodes data từ API, tạo episodes mặc định
     List<Episode> episodes = [];
-    
-    if (_selectedMovie!.episodes.isNotEmpty && _selectedMovie!.episodes[0].serverData.isNotEmpty) {
+
+    if (_selectedMovie!.episodes.isNotEmpty &&
+        _selectedMovie!.episodes[0].serverData.isNotEmpty) {
       episodes = _selectedMovie!.episodes[0].serverData;
     } else {
       // Tạo episodes mặc định dựa trên episode_current
@@ -424,49 +430,58 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           // Trường hợp "Hoàn Tất (6/6)" hoặc "5/10"
           final parts = episodeCurrent.split('/');
           if (parts.length == 2) {
-            final totalEpisodes = int.tryParse(parts[1].replaceAll(RegExp(r'[^\d]'), '')) ?? 1;
+            final totalEpisodes =
+                int.tryParse(parts[1].replaceAll(RegExp(r'[^\d]'), '')) ?? 1;
             for (int i = 1; i <= totalEpisodes; i++) {
-              episodes.add(Episode(
-                name: 'Tập $i',
-                slug: 'tap-$i',
-                filename: 'tap-$i',
-                linkEmbed: '',
-                linkM3u8: '',
-              ));
+              episodes.add(
+                Episode(
+                  name: 'Tập $i',
+                  slug: 'tap-$i',
+                  filename: 'tap-$i',
+                  linkEmbed: '',
+                  linkM3u8: '',
+                ),
+              );
             }
           }
-        } else if (episodeCurrent.toLowerCase().contains('full') || 
-                   episodeCurrent.toLowerCase().contains('hoàn tất')) {
+        } else if (episodeCurrent.toLowerCase().contains('full') ||
+            episodeCurrent.toLowerCase().contains('hoàn tất')) {
           // Phim lẻ hoặc hoàn tất
-          episodes.add(Episode(
-            name: 'Full',
-            slug: 'full',
-            filename: 'full',
-            linkEmbed: '',
-            linkM3u8: '',
-          ));
+          episodes.add(
+            Episode(
+              name: 'Full',
+              slug: 'full',
+              filename: 'full',
+              linkEmbed: '',
+              linkM3u8: '',
+            ),
+          );
         } else {
           // Trường hợp khác, tạo 1 tập mặc định
-          episodes.add(Episode(
+          episodes.add(
+            Episode(
+              name: 'Tập 1',
+              slug: 'tap-1',
+              filename: 'tap-1',
+              linkEmbed: '',
+              linkM3u8: '',
+            ),
+          );
+        }
+      } else {
+        // Không có thông tin, tạo tập mặc định
+        episodes.add(
+          Episode(
             name: 'Tập 1',
             slug: 'tap-1',
             filename: 'tap-1',
             linkEmbed: '',
             linkM3u8: '',
-          ));
-        }
-      } else {
-        // Không có thông tin, tạo tập mặc định
-        episodes.add(Episode(
-          name: 'Tập 1',
-          slug: 'tap-1',
-          filename: 'tap-1',
-          linkEmbed: '',
-          linkM3u8: '',
-        ));
+          ),
+        );
       }
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -474,9 +489,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           'Chọn tập',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         if (episodes.isEmpty)
           const Text(
             'Phim này chưa có tập nào',
@@ -488,7 +503,7 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
             runSpacing: 8,
             children: episodes.map((episode) {
               final isSelected = _selectedEpisodeSlug == episode.slug;
-              
+
               return FilterChip(
                 label: Text(episode.name),
                 selected: isSelected,

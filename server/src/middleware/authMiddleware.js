@@ -12,7 +12,7 @@ export const verifyToken = (req, res, next) => {
 
         console.log("Check Token Decoded:", decoded);
 
-        req.authID = decoded.id || decoded._id || decoded.userId || decoded.authID;
+        req.authID = decoded.authID || decoded.id || decoded._id || decoded.userId;
 
         if (!req.authID) {
             console.log("Lỗi: Token hợp lệ nhưng không tìm thấy ID user bên trong!");

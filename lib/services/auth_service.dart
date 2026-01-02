@@ -42,24 +42,36 @@ class AuthService {
     required String password,
   }) async {
     try {
+      final url = ApiConfig.loginUrl;
+      print('=== Login API Debug ===');
+      print('URL: $url');
+      print('Email: $email');
+
       final response = await http
           .post(
-            Uri.parse(ApiConfig.loginUrl),
+            Uri.parse(url),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(ApiConfig.timeout);
+
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
 
       // Save token and user data if login successful
       if (authResponse.success && authResponse.token != null) {
+        print('Login successful, saving token...');
         await _saveAuthData(authResponse.token!, authResponse.user);
+      } else {
+        print('Login failed: ${authResponse.message}');
       }
 
       return authResponse;
     } catch (e) {
+      print('Login Error: $e');
       return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
     }
   }
@@ -87,9 +99,6 @@ class AuthService {
   Future<AuthResponse> googleLogin({required String googleToken}) async {
     try {
       final url = ApiConfig.googleLoginUrl;
-      print('=== Google Login API Debug ===');
-      print('URL: $url');
-
       final response = await http
           .post(
             Uri.parse(url),
@@ -97,11 +106,6 @@ class AuthService {
             body: jsonEncode({'googleToken': googleToken}),
           )
           .timeout(ApiConfig.timeout);
-
-      print('Status Code: ${response.statusCode}');
-      print(
-        'Response Body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}',
-      );
 
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
@@ -112,7 +116,6 @@ class AuthService {
 
       return authResponse;
     } catch (e) {
-      print('Google Login Error: $e');
       return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
     }
   }

@@ -3,17 +3,16 @@
 class ApiConfig {
   // Base URL for the backend API
   // Web: dùng IP thực của máy
-  static const String baseUrl = 'http://10.0.0.64:4000';
+  static const String baseUrl = 'http://10.0.0.2:4000';
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
   static const String userEndpoint = '/api/user';
   static const String commentEndpoint = '/api/comments';
   static const String movieEndpoint = '/api/movies';
-  static const String savedMovieEndpoint = '/api/saved-movies';
-  
-  // WebSocket URL for Socket.IO
-  static const String socketUrl = 'http://10.0.0.64:4000';
+
+  // WebSocket URL for Socket.IOủa
+  static const String socketUrl = 'http://10.0.0.2:4000';
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';
@@ -43,15 +42,14 @@ class ApiConfig {
       '$baseUrl$movieEndpoint/country/$slug';
   static String getMoviesByYearUrl(int year) =>
       '$baseUrl$movieEndpoint/year/$year';
-  static String searchMoviesUrl(String query) =>
-      '$baseUrl$movieEndpoint?search=$query';
-
-  // SavedMovie endpoints
-  static String get savedMoviesUrl => '$baseUrl$savedMovieEndpoint';
-  static String removeSavedMovieUrl(String movieSlug) =>
-      '$baseUrl$savedMovieEndpoint/$movieSlug';
   static String getMovieDetailUrl(String slug) =>
       '$baseUrl$movieEndpoint/$slug';
+  static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
+
+  // Saved Movies endpoints
+  static String get savedMoviesUrl => '$baseUrl$movieEndpoint/saved';
+  static String removeSavedMovieUrl(String movieSlug) =>
+      '$baseUrl$movieEndpoint/saved/$movieSlug';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

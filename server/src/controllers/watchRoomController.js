@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const createWatchRoom = async (req, res) => {
     try {
         const { movieId, episodeSlug, title, description, isPrivate, password, maxUsers } = req.body;
-        const hostId = req.authId;
+        const hostId = req.authID;
 
         console.log('🔥 Create room request:', {
             movieId,

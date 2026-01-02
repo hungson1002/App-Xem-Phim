@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./server
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      # Note: The user needs to verify MONGODB_URI.
+      # If using localhost mongo, use host.docker.internal or a mongo service here.
+      # For now, we assume .env file in server/ handles it or it's passed here.
+    env_file:
+      - ./server/.env
+
+  frontend:
+    build:
+      context: .
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

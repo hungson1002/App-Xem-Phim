@@ -1,0 +1,134 @@
+{
+  "status": true,
+  "msg": "done",
+  "movie": {
+    "tmdb": {
+      "type": "tv",
+      "id": "197491",
+      "season": 1,
+      "vote_average": 0,
+      "vote_count": 0
+    },
+    "imdb": {
+      "id": null
+    },
+    "created": {
+      "time": "2025-12-18T21:59:38.000Z"
+    },
+    "modified": {
+      "time": "2025-12-28T11:48:13.000Z"
+    },
+    "_id": "21e45351cbbcb790e2aa2e046405fb1f",
+    "name": "Ác Nhân",
+    "slug": "ac-nhan-2025",
+    "origin_name": "Villains",
+    "content": "Khi những kẻ phản diện chính thức lộ diện. Một bộ phim chính kịch tội phạm xoay quanh những cuộc đụng độ đẫm máu và đối đầu khốc liệt giữa các băng nhóm tội phạm vì những tờ tiền giả ‘siêu hoàn hảo’.",
+    "type": "series",
+    "status": "ongoing",
+    "poster_url": "https://phimimg.com/upload/vod/20251218-1/10a1719c4c03ce36031e4dbc41d8e48b.jpg",
+    "thumb_url": "https://phimimg.com/upload/vod/20251218-1/3e6a17f1213fd9439639469be99992eb.jpg",
+    "is_copyright": false,
+    "sub_docquyen": false,
+    "chieurap": false,
+    "trailer_url": "https://www.youtube.com/watch?v=YrCXxX7BGQc",
+    "time": "34 phút/tập",
+    "episode_current": "Tập 4",
+    "episode_total": "8",
+    "quality": "FHD",
+    "lang": "Vietsub + Thuyết Minh",
+    "notify": "",
+    "showtimes": "",
+    "year": 2025,
+    "view": 0,
+    "actor": [
+      "Yoo Ji-tae",
+      "Kwak Do-won",
+      "Lee Min-jung",
+      "Lee Beom-soo",
+      "Kim Jae-yong"
+    ],
+    "director": [
+      "Jin Hyuk"
+    ],
+    "category": [
+      {
+        "id": "37a7b38b6184a5ebd3c43015aa20709d",
+        "name": "Chính Kịch",
+        "slug": "chinh-kich"
+      },
+      {
+        "id": "7a035ac0b37f5854f0f6979260899c90",
+        "name": "Hình Sự",
+        "slug": "hinh-su"
+      },
+      {
+        "id": "a7b065b92ad356387ef2e075dee66529",
+        "name": "Tâm Lý",
+        "slug": "tam-ly"
+      }
+    ],
+    "country": [
+      {
+        "id": "05de95be5fc404da9680bbb3dd8262e6",
+        "name": "Hàn Quốc",
+        "slug": "han-quoc"
+      }
+    ],
+    "webp_poster": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251218-1/10a1719c4c03ce36031e4dbc41d8e48b.jpg",
+    "webp_thumb": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251218-1/3e6a17f1213fd9439639469be99992eb.jpg"
+  },
+  "episodes": [
+    {
+      "server_name": "#Hà Nội (Vietsub)",
+      "server_data": [
+        {
+          "name": "Tập 01",
+          "slug": "tap-01",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Vietsub - Tập 01",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251228/JXQYj1zM/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251228/JXQYj1zM/index.m3u8"
+        },
+        {
+          "name": "Tập 02",
+          "slug": "tap-02",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Vietsub - Tập 02",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251228/D850wEOj/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251228/D850wEOj/index.m3u8"
+        },
+        {
+          "name": "Tập 03",
+          "slug": "tap-03",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Vietsub - Tập 03",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251227/tDgCvtMi/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251227/tDgCvtMi/index.m3u8"
+        },
+        {
+          "name": "Tập 04",
+          "slug": "tap-04",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Vietsub - Tập 04",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251227/nMR9o10n/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251227/nMR9o10n/index.m3u8"
+        }
+      ]
+    },
+    {
+      "server_name": "#Hà Nội (Thuyết Minh)",
+      "server_data": [
+        {
+          "name": "Tập 01",
+          "slug": "tap-01",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Thuyết Minh - Tập 01",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251227/cPx97DPE/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251227/cPx97DPE/index.m3u8"
+        },
+        {
+          "name": "Tập 02",
+          "slug": "tap-02",
+          "filename": "Ác Nhân - Villains - 2025 - 1080p - Thuyết Minh - Tập 02",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251227/Px80dmsk/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251227/Px80dmsk/index.m3u8"
+        }
+      ]
+    }
+  ]
+}

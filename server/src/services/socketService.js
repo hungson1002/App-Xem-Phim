@@ -30,11 +30,8 @@ class SocketService {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
                 // Fetch user info based on authID from token
-                console.log(` Authenticating socket. AuthID: ${decoded.authID}`);
                 const user = await Auth.findById(decoded.authID);
-
                 if (user) {
-                    console.log(` Authenticated as: ${user.name}`);
                     socket.user = user;
                     socket.userId = user._id.toString();
                     socket.username = user.name;
@@ -49,7 +46,7 @@ class SocketService {
         });
 
         this.io.on('connection', (socket) => {
-            console.log(`User ${socket.username} connected: ${socket.id}`);
+
 
             this.handleConnection(socket);
         });
@@ -116,12 +113,17 @@ class SocketService {
                 room = await room.populate('movieId', 'name poster_url');
                 room = await room.populate('currentUsers.userId', 'name avatar');
             } catch (popError) {
-                console.error('Populate error:', popError);
+
                 // Continue even if populate fails (might show partial data)
             }
 
-            // Validate password if private
-            if (room.isPrivate && room.password && room.password !== password) {
+            // Check if user is the host
+            const userIdStr = socket.user._id.toString();
+            const hostIdStr = room.hostId.toString();
+            const isHost = hostIdStr === userIdStr;
+
+            // Validate password if private (but skip for host)
+            if (room.isPrivate && room.password && !isHost && room.password !== password) {
                 socket.emit('error', { message: 'Mật khẩu không đúng' });
                 return;
             }
@@ -132,13 +134,7 @@ class SocketService {
                 return;
             }
 
-            // Safe Host Check
-            const userIdStr = socket.user._id.toString();
-            const hostIdStr = room.hostId.toString();
-
-            const isHost = hostIdStr === userIdStr;
-
-            // Add user to room
+            // Add user to room (using isHost from above)
             const roomUser = {
                 userId: socket.user._id,
                 username: socket.user.name,
@@ -189,22 +185,7 @@ class SocketService {
                 userCount: room.currentUsers.length
             });
 
-            // Send system message - DISABLED to prevent spam
-            /*
-            const systemMessage = new ChatMessage({
-                roomId,
-                userId: socket.userId,
-                username: 'System',
-                message: `${socket.username} đã tham gia phòng`,
-                type: 'system'
-            });
-            await systemMessage.save();
-
-            this.io.to(roomId).emit('new-message', systemMessage);
-            */
-
         } catch (error) {
-            console.error('Join room error:', error);
             socket.emit('error', { message: 'Lỗi khi tham gia phòng' });
         }
     }
@@ -213,7 +194,6 @@ class SocketService {
         try {
             await this.removeUserFromRoom(socket, roomId);
         } catch (error) {
-            console.error('Leave room error:', error);
         }
     }
 
@@ -248,7 +228,6 @@ class SocketService {
             });
 
         } catch (error) {
-            console.error('Video control error:', error);
         }
     }
 
@@ -275,26 +254,22 @@ class SocketService {
             });
 
         } catch (error) {
-            console.error('Video seek error:', error);
         }
     }
 
     async handleSendMessage(socket, { roomId, message, videoTimestamp, replyTo }) {
         try {
-            console.log(`📥 Received send-message from ${socket.username}: "${message}" to room: ${roomId}`);
+
 
             const room = await WatchRoom.findOne({ roomId });
             if (!room) {
-                console.log(`❌ Room not found: ${roomId}`);
                 return;
             }
 
             if (!room.settings.allowChat) {
-                console.log(`❌ Chat disabled for room: ${roomId}`);
                 return;
             }
 
-            console.log(`✅ Creating chat message...`);
             const chatMessage = new ChatMessage({
                 roomId,
                 userId: socket.userId,
@@ -306,13 +281,8 @@ class SocketService {
             });
 
             await chatMessage.save();
-            console.log(`💾 Message saved to DB: ${chatMessage._id}`);
-
             this.io.to(roomId).emit('new-message', chatMessage);
-            console.log(`📤 Emitted new-message to room: ${roomId}`);
-
         } catch (error) {
-            console.error('❌ Send message error:', error);
         }
     }
 
@@ -370,7 +340,7 @@ class SocketService {
     }
 
     async handleDisconnect(socket) {
-        console.log(`User ${socket.username} disconnected: ${socket.id}`);
+
 
         if (socket.currentRoom) {
             await this.removeUserFromRoom(socket, socket.currentRoom);
@@ -425,22 +395,6 @@ class SocketService {
                 username: socket.username,
                 userCount: room.currentUsers.length
             });
-
-            // System message
-            // System message - DISABLED
-            /*
-            if (room.currentUsers.length > 0) {
-                const systemMessage = new ChatMessage({
-                    roomId,
-                    userId: socket.userId,
-                    username: 'System',
-                    message: `${socket.username} đã rời phòng`,
-                    type: 'system'
-                });
-                await systemMessage.save();
-                this.io.to(roomId).emit('new-message', systemMessage);
-            }
-            */
 
         } catch (error) {
             console.error('Remove user from room error:', error);

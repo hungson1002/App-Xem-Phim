@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../utils.dart';
-import '../Views/search_screen.dart';
+
 import '../Views/profile_screen.dart';
+import '../Views/search_screen.dart';
 import '../Views/watchrooms_list_screen.dart';
 import '../models/user_model.dart';
+import '../utils.dart';
 
 class HomeAppBar extends StatelessWidget {
   final User? user;
@@ -21,18 +22,26 @@ class HomeAppBar extends StatelessWidget {
       elevation: 0,
       floating: true,
       pinned: true,
+      titleSpacing: 0,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF5BA3F5),
-            borderRadius: BorderRadius.circular(8),
+            gradient: const LinearGradient(
+              colors: [
+                Color.fromARGB(255, 233, 11, 30),
+                Color.fromARGB(255, 240, 226, 16),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.movie, color: Colors.white),
+          child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
         ),
       ),
       title: Text(
-        'MovieApp',
+        'CHILL PHIM',
         style: TextStyle(
           color: isDark ? Colors.white : Colors.black,
           fontSize: 18,

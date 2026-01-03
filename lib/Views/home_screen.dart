@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../Components/app_snackbar.dart';
 import '../Components/bottom_navbar.dart';
 import '../Components/home_app_bar.dart';
 import '../Components/movie_section.dart';
@@ -177,18 +178,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 _savedMovieSlugs.add(slug);
                               }
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  wasSaved
-                                      ? 'Đã xóa khỏi danh sách'
-                                      : 'Đã lưu phim',
-                                ),
-                                backgroundColor: wasSaved
-                                    ? Colors.orange
-                                    : const Color(0xFF5BA3F5),
-                              ),
-                            );
+                            if (wasSaved) {
+                              AppSnackBar.showWarning(
+                                context,
+                                'Đã xóa khỏi danh sách',
+                              );
+                            } else {
+                              AppSnackBar.showSuccess(context, 'Đã lưu phim');
+                            }
                           }
                         },
                         onMovieTap: (index) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fe/models/user_model.dart';
 import 'package:flutter/material.dart';
 import '../models/watch_room_model.dart';
 import '../models/chat_message_model.dart';
@@ -17,6 +18,10 @@ class WatchRoomProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _isConnected = false;
+
+  // User cache
+  final Map<String, User> _userCache = {};
+  Map<String, User> get userCache => _userCache;
 
   // Video state
   double _currentTime = 0;
@@ -121,8 +126,21 @@ class WatchRoomProvider with ChangeNotifier {
       notifyListeners();
     });
 
-    _newMessageSubscription = _socketService.newMessageStream.listen((message) {
+    _newMessageSubscription = _socketService.newMessageStream.listen((
+      message,
+    ) async {
       _messages.add(message);
+      if (!_userCache.containsKey(message.userId)) {
+        try {
+          final result = await _watchRoomService.getUserById(message.userId);
+          if (result != null && result['user'] != null) {
+            final user = User.fromJson(result['user']);
+            _userCache[message.userId] = user;
+          }
+        } catch (e) {
+          print('Error loading user for message: $e');
+        }
+      }
       notifyListeners();
     });
 
@@ -222,12 +240,24 @@ class WatchRoomProvider with ChangeNotifier {
         _currentRoom = result['room'];
         notifyListeners();
 
+        //load user + avt
+        final userResult = await _watchRoomService.getRoomUsers(roomId);
+
+        if (userResult['success'] == true) {
+          for (final u in userResult['users']) {
+            final user = User.fromJson(u);
+            _userCache[user.id] = user;
+          }
+        }
+        // connect socket
         if (!_socketService.isConnected) {
           await connectSocket();
         }
 
         // Listen for room-joined event before loading chat
-        final subscription = _socketService.roomJoinedStream.listen((room) async {
+        final subscription = _socketService.roomJoinedStream.listen((
+          room,
+        ) async {
           await loadChatHistory(roomId);
         });
 
@@ -259,6 +289,7 @@ class WatchRoomProvider with ChangeNotifier {
         notifyListeners();
       }
     }
+    _userCache.clear();
   }
 
   // Video control
@@ -335,15 +366,34 @@ class WatchRoomProvider with ChangeNotifier {
           _chatTotalPages = pagination['total'];
         }
 
+        final List<ChatMessage> messages = result['messages'];
+
+        // Cache users from messages
+        for (final message in messages) {
+          if (!_userCache.containsKey(message.userId)) {
+            try {
+              final userResult = await _watchRoomService.getUserById(
+                message.userId,
+              );
+              if (userResult != null && userResult['user'] != null) {
+                final user = User.fromJson(userResult['user']);
+                _userCache[message.userId] = user;
+              }
+            } catch (e) {
+              print('Error loading user ${message.userId}: $e');
+            }
+          }
+        }
+
         if (page == 1) {
-          _messages = result['messages'];
+          _messages = messages;
         } else {
-          _messages.insertAll(0, result['messages']);
+          _messages.insertAll(0, messages);
         }
         notifyListeners();
       }
     } catch (e) {
-      // Silent fail for chat history
+      print('Error loading chat history: $e');
     } finally {
       if (page > 1) {
         _isLoadingMoreChat = false;

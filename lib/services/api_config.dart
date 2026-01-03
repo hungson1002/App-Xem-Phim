@@ -3,7 +3,7 @@
 class ApiConfig {
   // Base URL for the backend API
   // Web: dùng IP thực của máy
-  static const String baseUrl = 'http://10.0.0.2:4000';
+  static const String baseUrl = 'http://10.0.2.2:4000';
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
@@ -12,7 +12,7 @@ class ApiConfig {
   static const String movieEndpoint = '/api/movies';
 
   // WebSocket URL for Socket.IOủa
-  static const String socketUrl = 'http://10.0.0.2:4000';
+  static const String socketUrl = 'http://10.0.2.2:4000';
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';

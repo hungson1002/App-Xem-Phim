@@ -56,7 +56,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
 
   Future<void> _loadMoreMessages(WatchRoomProvider provider) async {
     final oldMaxScroll = _scrollController.position.maxScrollExtent;
-    
+
     await provider.loadChatHistory(
       provider.currentRoom!.roomId,
       page: provider.chatPage + 1,
@@ -67,13 +67,13 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     // The scroll offset 0 stays 0, showing new items.
     // We want to jump to (new items height).
     // newItemsHeight approx = newMaxScroll - oldMaxScroll.
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         final newMaxScroll = _scrollController.position.maxScrollExtent;
         final diff = newMaxScroll - oldMaxScroll;
         if (diff > 0) {
-           // Jump to offset = diff to keep viewing the same item as before
+          // Jump to offset = diff to keep viewing the same item as before
           _scrollController.jumpTo(_scrollController.offset + diff);
         }
       }
@@ -97,7 +97,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     if (message.isEmpty) return;
 
     final provider = Provider.of<WatchRoomProvider>(context, listen: false);
-    
+
     ChatReply? replyTo;
     if (_replyToMessage != null) {
       replyTo = ChatReply(
@@ -109,7 +109,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
 
     provider.sendMessage(message, replyTo: replyTo);
     _messageController.clear();
-    
+
     if (_replyToMessage != null) {
       setState(() {
         _replyToMessage = null;
@@ -121,7 +121,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Consumer<WatchRoomProvider>(
       builder: (context, provider, child) {
         // Filter out system messages for UI
@@ -150,10 +150,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
               children: [
                 Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
                 SizedBox(height: 16),
-                Text(
-                  'Chat đã bị tắt',
-                  style: TextStyle(color: Colors.grey),
-                ),
+                Text('Chat đã bị tắt', style: TextStyle(color: Colors.grey)),
               ],
             ),
           );
@@ -192,15 +189,12 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                     const Spacer(),
                     Text(
                       '${visibleMessages.length} tin nhắn',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
-              
+
               // Messages list
               Expanded(
                 child: visibleMessages.isEmpty
@@ -208,7 +202,11 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 16),
                             Text(
                               'Chưa có tin nhắn nào',
@@ -217,7 +215,10 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                             SizedBox(height: 8),
                             Text(
                               'Hãy bắt đầu cuộc trò chuyện!',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -232,7 +233,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                         },
                       ),
               ),
-              
+
               // Message input
               _buildMessageInput(isDark),
             ],
@@ -245,7 +246,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
   Widget _buildMessageItem(ChatMessage message, WatchRoomProvider provider) {
     final isCurrentUser = message.userId == _currentUserId;
     final isSystemMessage = message.isSystemMessage;
-    
+
     if (isSystemMessage) {
       return const SizedBox.shrink();
     }
@@ -258,10 +259,8 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
           // Avatar
           CircleAvatar(
             radius: 16,
-            backgroundImage: message.avatar.isNotEmpty
-                ? NetworkImage(message.avatar)
-                : null,
-            child: message.avatar.isEmpty
+            backgroundImage: _getAvatarImage(message, provider),
+            child: _getAvatarImage(message, provider) == null
                 ? Text(
                     message.username.isNotEmpty
                         ? message.username[0].toUpperCase()
@@ -270,9 +269,9 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                   )
                 : null,
           ),
-          
+
           const SizedBox(width: 8),
-          
+
           // Message content
           Expanded(
             child: Column(
@@ -285,10 +284,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                     padding: const EdgeInsets.only(left: 8, top: 2, bottom: 2),
                     decoration: BoxDecoration(
                       border: Border(
-                        left: BorderSide(
-                          color: Colors.grey[400]!,
-                          width: 2,
-                        ),
+                        left: BorderSide(color: Colors.grey[400]!, width: 2),
                       ),
                     ),
                     child: Column(
@@ -326,17 +322,14 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                         color: isCurrentUser ? Colors.blue : null,
                       ),
                     ),
-                    
+
                     const SizedBox(width: 8),
-                    
+
                     Text(
                       _formatMessageTime(message.createdAt),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                     ),
-                    
+
                     if (message.videoTimestamp > 0) ...[
                       const SizedBox(width: 8),
                       Container(
@@ -359,15 +352,12 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                     ],
                   ],
                 ),
-                
+
                 const SizedBox(height: 2),
-                
+
                 // Message text
-                Text(
-                  message.message,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                
+                Text(message.message, style: const TextStyle(fontSize: 14)),
+
                 // Reactions
                 if (message.reactions.isNotEmpty)
                   Container(
@@ -380,25 +370,25 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
 
                 // Like Icon Button (Quick Reaction)
                 GestureDetector(
-                   onTap: () => _showReactionPicker(message, provider),
-                   child: Container(
-                     margin: const EdgeInsets.only(top: 4),
-                     padding: const EdgeInsets.all(4),
-                     decoration: BoxDecoration(
-                       shape: BoxShape.circle,
-                       color: Colors.grey.withOpacity(0.1),
-                     ),
-                     child: const Icon(
-                       Icons.favorite_border,
-                       size: 14,
-                       color: Colors.grey,
-                     ),
-                   ),
+                  onTap: () => _showReactionPicker(message, provider),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey.withOpacity(0.1),
+                    ),
+                    child: const Icon(
+                      Icons.favorite_border,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          
+
           // Message actions (Menu)
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, size: 16),
@@ -443,22 +433,26 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     );
   }
 
-  List<Widget> _buildReactions(ChatMessage message, WatchRoomProvider provider) {
+  List<Widget> _buildReactions(
+    ChatMessage message,
+    WatchRoomProvider provider,
+  ) {
     final reactionCounts = <String, int>{};
     final userReactions = <String, bool>{};
-    
+
     for (final reaction in message.reactions) {
-      reactionCounts[reaction.emoji] = (reactionCounts[reaction.emoji] ?? 0) + 1;
+      reactionCounts[reaction.emoji] =
+          (reactionCounts[reaction.emoji] ?? 0) + 1;
       if (reaction.userId == _currentUserId) {
         userReactions[reaction.emoji] = true;
       }
     }
-    
+
     return reactionCounts.entries.map((entry) {
       final emoji = entry.key;
       final count = entry.value;
       final isUserReacted = userReactions[emoji] ?? false;
-      
+
       return GestureDetector(
         onTap: () {
           provider.addReaction(message.id, emoji);
@@ -605,30 +599,35 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
               'Chọn cảm xúc',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Wrap(
               spacing: 16,
               runSpacing: 16,
               children: ['😀', '😂', '😍', '😢', '😡', '👍', '👎', '❤️']
-                  .map((emoji) => GestureDetector(
-                        onTap: () {
-                          provider.addReaction(message.id, emoji);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                  .map(
+                    (emoji) => GestureDetector(
+                      onTap: () {
+                        provider.addReaction(message.id, emoji);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ))
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
-            
+
             const SizedBox(height: 16),
           ],
         ),
@@ -639,7 +638,7 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
   String _formatMessageTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inMinutes < 1) {
       return 'Vừa xong';
     } else if (difference.inHours < 1) {
@@ -649,6 +648,26 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
     } else {
       return '${dateTime.day}/${dateTime.month}';
     }
+  }
+
+  ImageProvider? _getAvatarImage(
+    ChatMessage message,
+    WatchRoomProvider provider,
+  ) {
+    // Try to get avatar from user cache first
+    final cachedUser = provider.userCache[message.userId];
+    if (cachedUser != null &&
+        cachedUser.avatar != null &&
+        cachedUser.avatar!.isNotEmpty) {
+      return NetworkImage(cachedUser.avatar!);
+    }
+
+    // Fall back to avatar from message
+    if (message.avatar.isNotEmpty) {
+      return NetworkImage(message.avatar);
+    }
+
+    return null;
   }
 
   String _formatTime(double seconds) {

@@ -382,27 +382,12 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
                   subtitle: Text(movie.originName ?? ''),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    print('Selected movie: ${movie.name}'); // Debug log
                     setState(() {
                       _selectedMovie = movie;
                       _searchResults = [];
                       _titleController.text = '${movie.name} - Xem cùng nhau';
-
-                      // Tự động chọn tập đầu tiên
-                      if (movie.episodes.isNotEmpty &&
-                          movie.episodes[0].serverData.isNotEmpty) {
-                        _selectedEpisodeSlug =
-                            movie.episodes[0].serverData[0].slug;
-                      } else {
-                        // Tạo episode mặc định dựa trên episode_current
-                        final episodeCurrent = movie.episodeCurrent;
-                        if (episodeCurrent.toLowerCase().contains('full') ||
-                            episodeCurrent.toLowerCase().contains('hoàn tất')) {
-                          _selectedEpisodeSlug = 'full';
-                        } else {
-                          _selectedEpisodeSlug = 'tap-1';
-                        }
-                      }
+                      // reset episode
+                      _selectedEpisodeSlug = null;
                     });
                   },
                 );
@@ -416,71 +401,9 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
   Widget _buildEpisodeSelection() {
     if (_selectedMovie == null) return const SizedBox();
 
-    // Nếu không có episodes data từ API, tạo episodes mặc định
-    List<Episode> episodes = [];
-
-    if (_selectedMovie!.episodes.isNotEmpty &&
-        _selectedMovie!.episodes[0].serverData.isNotEmpty) {
-      episodes = _selectedMovie!.episodes[0].serverData;
-    } else {
-      // Tạo episodes mặc định dựa trên episode_current
-      final episodeCurrent = _selectedMovie!.episodeCurrent;
-      if (episodeCurrent.isNotEmpty) {
-        if (episodeCurrent.contains('/')) {
-          // Trường hợp "Hoàn Tất (6/6)" hoặc "5/10"
-          final parts = episodeCurrent.split('/');
-          if (parts.length == 2) {
-            final totalEpisodes =
-                int.tryParse(parts[1].replaceAll(RegExp(r'[^\d]'), '')) ?? 1;
-            for (int i = 1; i <= totalEpisodes; i++) {
-              episodes.add(
-                Episode(
-                  name: 'Tập $i',
-                  slug: 'tap-$i',
-                  filename: 'tap-$i',
-                  linkEmbed: '',
-                  linkM3u8: '',
-                ),
-              );
-            }
-          }
-        } else if (episodeCurrent.toLowerCase().contains('full') ||
-            episodeCurrent.toLowerCase().contains('hoàn tất')) {
-          // Phim lẻ hoặc hoàn tất
-          episodes.add(
-            Episode(
-              name: 'Full',
-              slug: 'full',
-              filename: 'full',
-              linkEmbed: '',
-              linkM3u8: '',
-            ),
-          );
-        } else {
-          // Trường hợp khác, tạo 1 tập mặc định
-          episodes.add(
-            Episode(
-              name: 'Tập 1',
-              slug: 'tap-1',
-              filename: 'tap-1',
-              linkEmbed: '',
-              linkM3u8: '',
-            ),
-          );
-        }
-      } else {
-        // Không có thông tin, tạo tập mặc định
-        episodes.add(
-          Episode(
-            name: 'Tập 1',
-            slug: 'tap-1',
-            filename: 'tap-1',
-            linkEmbed: '',
-            linkM3u8: '',
-          ),
-        );
-      }
-    }
+    final episodes = _selectedMovie!.episodes.isNotEmpty
+        ? _selectedMovie!.episodes[0].serverData
+        : <Episode>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,12 +412,11 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
           'Chọn tập',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 12),
 
         if (episodes.isEmpty)
           const Text(
-            'Phim này chưa có tập nào',
+            'Phim chưa có tập để xem',
             style: TextStyle(color: Colors.grey),
           )
         else

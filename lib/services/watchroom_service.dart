@@ -227,7 +227,7 @@ class WatchRoomService {
 
       final response = await http.get(uri, headers: headers);
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         final messages = (data['data']['messages'] as List)
             .map((message) {
@@ -285,6 +285,55 @@ class WatchRoomService {
         };
       }
     } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
+  }
+
+  // Lấy thông tin user theo ID
+  Future<Map<String, dynamic>?> getUserById(String userId) async {
+    try {
+      final headers = await _getHeaders();
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/users/$userId'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['data'];
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching user by ID: $e');
+      return null;
+    }
+  }
+
+  // Lấy danh sách users trong phòng
+  Future<Map<String, dynamic>> getRoomUsers(String roomId) async {
+    try {
+      final headers = await _getHeaders();
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/watch-rooms/$roomId/users'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'users': data['data']['users'] ?? []};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Lỗi khi lấy danh sách users',
+        };
+      }
+    } catch (e) {
+      print('Error fetching room users: $e');
       return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }

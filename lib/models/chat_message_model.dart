@@ -35,31 +35,57 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     // Safe userId extraction
     String userId = '';
+    String username = '';
+    String avatar = '';
+
     if (json['userId'] != null) {
       if (json['userId'] is String) {
         userId = json['userId'];
       } else if (json['userId'] is Map) {
-        userId = json['userId']['_id'] ?? '';
+        // userId is populated with user data
+        final userMap = json['userId'] as Map<String, dynamic>;
+        userId = userMap['_id'] ?? userMap['id'] ?? '';
+        // Extract username and avatar from populated user data
+        username = userMap['name'] ?? '';
+        avatar = userMap['avatar'] ?? '';
       }
+    }
+
+    // Fallback to root level username and avatar if not found in populated userId
+    if (username.isEmpty) {
+      username = json['username'] ?? '';
+    }
+    if (avatar.isEmpty) {
+      avatar = json['avatar'] ?? '';
     }
 
     return ChatMessage(
       id: json['_id'] ?? '',
       roomId: json['roomId'] ?? '',
       userId: userId,
-      username: json['username'] ?? '',
-      avatar: json['avatar'] ?? '',
+      username: username,
+      avatar: avatar,
       message: json['message'] ?? '',
       type: json['type'] ?? 'message',
       videoTimestamp: (json['videoTimestamp'] ?? 0).toDouble(),
-      reactions: (json['reactions'] as List<dynamic>?)
-          ?.map((reaction) => MessageReaction.fromJson(reaction))
-          .toList() ?? [],
-      replyTo: json['replyTo'] != null ? ChatReply.fromJson(json['replyTo']) : null,
+      reactions:
+          (json['reactions'] as List<dynamic>?)
+              ?.map((reaction) => MessageReaction.fromJson(reaction))
+              .toList() ??
+          [],
+      replyTo: json['replyTo'] != null
+          ? ChatReply.fromJson(json['replyTo'])
+          : null,
       isDeleted: json['isDeleted'] ?? false,
-      deletedAt: json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.parse(json['deletedAt'])
+          : null,
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
@@ -85,11 +111,11 @@ class ChatMessage {
   bool get isSystemMessage => type == 'system';
   bool get isEmojiMessage => type == 'emoji';
   bool get isStickerMessage => type == 'sticker';
-  
+
   int getReactionCount(String emoji) {
     return reactions.where((r) => r.emoji == emoji).length;
   }
-  
+
   bool hasUserReacted(String userId, String emoji) {
     return reactions.any((r) => r.userId == userId && r.emoji == emoji);
   }
@@ -108,9 +134,13 @@ class MessageReaction {
 
   factory MessageReaction.fromJson(Map<String, dynamic> json) {
     return MessageReaction(
-      userId: json['userId'] is String ? json['userId'] : json['userId']['_id'] ?? '',
+      userId: json['userId'] is String
+          ? json['userId']
+          : json['userId']['_id'] ?? '',
       emoji: json['emoji'] ?? '',
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
@@ -153,10 +183,6 @@ class ChatReply {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'messageId': messageId,
-      'username': username,
-      'message': message,
-    };
+    return {'messageId': messageId, 'username': username, 'message': message};
   }
 }

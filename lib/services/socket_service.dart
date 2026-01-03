@@ -79,31 +79,31 @@ class SocketService {
       );
 
       _setupEventListeners();
-      
+
       // Connect and wait for connection with timeout
       final completer = Completer<void>();
       Timer? timeoutTimer;
-      
+
       _socket!.onConnect((_) {
         timeoutTimer?.cancel();
         if (!completer.isCompleted) {
           completer.complete();
         }
       });
-      
+
       _socket!.onConnectError((error) {
         timeoutTimer?.cancel();
         if (!completer.isCompleted) {
           completer.completeError(error);
         }
       });
-      
+
       timeoutTimer = Timer(const Duration(seconds: 10), () {
         if (!completer.isCompleted) {
           completer.completeError(Exception('Connection timeout'));
         }
       });
-      
+
       _socket!.connect();
       await completer.future;
 
@@ -220,7 +220,7 @@ class SocketService {
 
   void leaveRoom(String roomId) {
     if (!_isConnected || _socket == null) return;
-    
+
     _socket!.emit('leave-room', {'roomId': roomId});
     _currentRoomId = null;
   }
@@ -229,10 +229,7 @@ class SocketService {
   void playVideo(String roomId, double currentTime) {
     if (!_isConnected || _socket == null) return;
 
-    _socket!.emit('video-play', {
-      'roomId': roomId,
-      'currentTime': currentTime,
-    });
+    _socket!.emit('video-play', {'roomId': roomId, 'currentTime': currentTime});
   }
 
   void pauseVideo(String roomId, double currentTime) {
@@ -247,10 +244,7 @@ class SocketService {
   void seekVideo(String roomId, double currentTime) {
     if (!_isConnected || _socket == null) return;
 
-    _socket!.emit('video-seek', {
-      'roomId': roomId,
-      'currentTime': currentTime,
-    });
+    _socket!.emit('video-seek', {'roomId': roomId, 'currentTime': currentTime});
   }
 
   void requestSync(String roomId) {
@@ -260,7 +254,12 @@ class SocketService {
   }
 
   // Chat methods
-  void sendMessage(String roomId, String message, {double videoTimestamp = 0, ChatReply? replyTo}) {
+  void sendMessage(
+    String roomId,
+    String message, {
+    double videoTimestamp = 0,
+    ChatReply? replyTo,
+  }) {
     if (!_isConnected || _socket == null) return;
 
     final data = {
@@ -279,10 +278,7 @@ class SocketService {
   void addReaction(String messageId, String emoji) {
     if (!_isConnected || _socket == null) return;
 
-    _socket!.emit('add-reaction', {
-      'messageId': messageId,
-      'emoji': emoji,
-    });
+    _socket!.emit('add-reaction', {'messageId': messageId, 'emoji': emoji});
   }
 
   // Disconnect

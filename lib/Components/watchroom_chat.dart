@@ -552,6 +552,8 @@ class _WatchRoomChatState extends State<WatchRoomChat> {
                   child: TextField(
                     controller: _messageController,
                     focusNode: _focusNode,
+                    //enableIMEPersonalizedLearning: false,
+                    //autocorrect: false,
                     decoration: InputDecoration(
                       hintText: 'Nhập tin nhắn...',
                       border: OutlineInputBorder(

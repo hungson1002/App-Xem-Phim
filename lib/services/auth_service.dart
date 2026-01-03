@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_response.dart';
 import '../models/user_model.dart';
 import 'api_config.dart';
+import 'socket_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -43,10 +44,6 @@ class AuthService {
   }) async {
     try {
       final url = ApiConfig.loginUrl;
-      print('=== Login API Debug ===');
-      print('URL: $url');
-      print('Email: $email');
-
       final response = await http
           .post(
             Uri.parse(url),
@@ -54,10 +51,6 @@ class AuthService {
             body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(ApiConfig.timeout);
-
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
 
@@ -198,6 +191,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(ApiConfig.tokenKey);
     await prefs.remove(ApiConfig.userKey);
+    final socketService = SocketService();
+    socketService.disconnect(); //disconnect socket khi user đăng xuất
   }
 
   Future<AuthResponse> resendVerifyOtp({required String email}) async {

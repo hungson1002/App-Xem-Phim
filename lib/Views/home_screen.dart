@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../Components/app_snackbar.dart';
 import '../Components/bottom_navbar.dart';
 import '../Components/home_app_bar.dart';
 import '../Components/movie_section.dart';
 import '../Components/movie_slide.dart';
+import '../main.dart';
 import '../models/movie_model.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -21,7 +23,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _currentIndex = 0;
   final AuthService _authService = AuthService();
   final MovieService _movieService = MovieService();
@@ -38,6 +40,28 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route observer để detect khi route thay đổi
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Được gọi khi một route khác được pop và HomeScreen hiển thị lại
+    _refreshSavedMovies();
   }
 
   Future<void> _loadData() async {
@@ -65,6 +89,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Chỉ refresh lại danh sách phim đã lưu (không load lại toàn bộ dữ liệu)
+  Future<void> _refreshSavedMovies() async {
+    final savedSlugs = await _savedMovieService.getSavedMovieSlugs();
+    if (mounted) {
+      setState(() {
+        _savedMovieSlugs = savedSlugs;
+      });
+    }
+  }
+
   void _onNavBarTap(int index) {
     if (index == _currentIndex) return;
 
@@ -88,7 +122,10 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => destination),
-    );
+    ).then((_) {
+      // Refresh saved movies khi quay lại từ BookmarkScreen hoặc các màn hình khác
+      _refreshSavedMovies();
+    });
   }
 
   @override
@@ -141,18 +178,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _savedMovieSlugs.add(slug);
                               }
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  wasSaved
-                                      ? 'Đã xóa khỏi danh sách'
-                                      : 'Đã lưu phim',
-                                ),
-                                backgroundColor: wasSaved
-                                    ? Colors.orange
-                                    : const Color(0xFF5BA3F5),
-                              ),
-                            );
+                            if (wasSaved) {
+                              AppSnackBar.showWarning(
+                                context,
+                                'Đã xóa khỏi danh sách',
+                              );
+                            } else {
+                              AppSnackBar.showSuccess(context, 'Đã lưu phim');
+                            }
                           }
                         },
                         onMovieTap: (index) {
@@ -163,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               builder: (context) =>
                                   MovieDetailScreen(slug: slug),
                             ),
-                          );
+                          ).then((_) => _refreshSavedMovies());
                         },
                       ),
               ),
@@ -178,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 savedMovieSlugs: _savedMovieSlugs,
                 onSeeAll: () {},
                 titleIcon: Icons.play_circle_outline,
+                onBookmarkChanged: _refreshSavedMovies,
               ),
             ),
 
@@ -189,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 isLoading: _isLoading,
                 savedMovieSlugs: _savedMovieSlugs,
                 onSeeAll: () {},
+                onBookmarkChanged: _refreshSavedMovies,
               ),
             ),
 
@@ -200,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 isLoading: _isLoading,
                 savedMovieSlugs: _savedMovieSlugs,
                 onSeeAll: () {},
+                onBookmarkChanged: _refreshSavedMovies,
               ),
             ),
 

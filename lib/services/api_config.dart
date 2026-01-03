@@ -47,9 +47,10 @@ class ApiConfig {
   static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
 
   // Saved Movies endpoints
-  static String get savedMoviesUrl => '$baseUrl$movieEndpoint/saved';
+  static const String savedMovieEndpoint = '/api/saved-movies';
+  static String get savedMoviesUrl => '$baseUrl$savedMovieEndpoint';
   static String removeSavedMovieUrl(String movieSlug) =>
-      '$baseUrl$movieEndpoint/saved/$movieSlug';
+      '$baseUrl$savedMovieEndpoint/$movieSlug';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

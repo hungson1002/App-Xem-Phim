@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../Components/app_snackbar.dart';
 import '../Components/bookmark_card.dart';
 import '../Components/bottom_navbar.dart';
 import '../services/saved_movie_service.dart';
@@ -45,12 +46,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
       setState(() {
         _bookmarkedMovies.removeAt(index);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã xóa khỏi danh sách'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppSnackBar.showWarning(context, 'Đã xóa khỏi danh sách');
     }
   }
 

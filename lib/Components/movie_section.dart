@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../Views/movie_detail_screen.dart';
 import '../models/movie_model.dart';
 import '../services/saved_movie_service.dart';
+import 'app_snackbar.dart';
 import 'movie_card.dart';
 
 class MovieSection extends StatefulWidget {
@@ -12,6 +13,7 @@ class MovieSection extends StatefulWidget {
   final VoidCallback? onSeeAll;
   final IconData? titleIcon;
   final Set<String>? savedMovieSlugs;
+  final VoidCallback? onBookmarkChanged;
 
   const MovieSection({
     super.key,
@@ -21,6 +23,7 @@ class MovieSection extends StatefulWidget {
     this.onSeeAll,
     this.titleIcon,
     this.savedMovieSlugs,
+    this.onBookmarkChanged,
   });
 
   @override
@@ -60,12 +63,14 @@ class _MovieSectionState extends State<MovieSection> {
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(wasSaved ? 'Đã xóa khỏi danh sách' : 'Đã lưu phim'),
-          backgroundColor: wasSaved ? Colors.orange : const Color(0xFF5BA3F5),
-        ),
-      );
+      // Thông báo cho parent widget biết bookmark đã thay đổi
+      widget.onBookmarkChanged?.call();
+
+      if (wasSaved) {
+        AppSnackBar.showWarning(context, 'Đã xóa khỏi danh sách');
+      } else {
+        AppSnackBar.showSuccess(context, 'Đã lưu phim');
+      }
     }
   }
 
@@ -147,7 +152,10 @@ class _MovieSectionState extends State<MovieSection> {
                                 builder: (context) =>
                                     MovieDetailScreen(slug: movie.slug),
                               ),
-                            );
+                            ).then((_) {
+                              // Khi quay lại từ detail screen, thông báo để refresh
+                              widget.onBookmarkChanged?.call();
+                            });
                           },
                         ),
                       ),

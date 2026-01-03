@@ -12,6 +12,7 @@ class MovieSection extends StatefulWidget {
   final VoidCallback? onSeeAll;
   final IconData? titleIcon;
   final Set<String>? savedMovieSlugs;
+  final VoidCallback? onBookmarkChanged;
 
   const MovieSection({
     super.key,
@@ -21,6 +22,7 @@ class MovieSection extends StatefulWidget {
     this.onSeeAll,
     this.titleIcon,
     this.savedMovieSlugs,
+    this.onBookmarkChanged,
   });
 
   @override
@@ -59,6 +61,9 @@ class _MovieSectionState extends State<MovieSection> {
           _localSavedSlugs.add(slug);
         }
       });
+
+      // Thông báo cho parent widget biết bookmark đã thay đổi
+      widget.onBookmarkChanged?.call();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -147,7 +152,10 @@ class _MovieSectionState extends State<MovieSection> {
                                 builder: (context) =>
                                     MovieDetailScreen(slug: movie.slug),
                               ),
-                            );
+                            ).then((_) {
+                              // Khi quay lại từ detail screen, thông báo để refresh
+                              widget.onBookmarkChanged?.call();
+                            });
                           },
                         ),
                       ),

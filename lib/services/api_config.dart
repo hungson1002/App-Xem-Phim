@@ -3,7 +3,7 @@
 class ApiConfig {
   // Base URL for the backend API
   // Web: dùng IP thực của máy
-  static const String baseUrl = 'http://10.0.0.2:4000';
+  static const String baseUrl = 'http://10.0.2.2:4000';
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
@@ -12,7 +12,7 @@ class ApiConfig {
   static const String movieEndpoint = '/api/movies';
 
   // WebSocket URL for Socket.IOủa
-  static const String socketUrl = 'http://10.0.0.2:4000';
+  static const String socketUrl = 'http://10.0.2.2:4000';
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';
@@ -47,9 +47,10 @@ class ApiConfig {
   static String get searchMoviesUrl => '$baseUrl$movieEndpoint/search';
 
   // Saved Movies endpoints
-  static String get savedMoviesUrl => '$baseUrl$movieEndpoint/saved';
+  static const String savedMovieEndpoint = '/api/saved-movies';
+  static String get savedMoviesUrl => '$baseUrl$savedMovieEndpoint';
   static String removeSavedMovieUrl(String movieSlug) =>
-      '$baseUrl$movieEndpoint/saved/$movieSlug';
+      '$baseUrl$savedMovieEndpoint/$movieSlug';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

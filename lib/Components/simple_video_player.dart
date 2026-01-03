@@ -32,11 +32,41 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
   bool _isInitialized = false;
   bool _hasError = false;
   String _errorMessage = '';
+  bool _wasPlaying = false; // Track previous playing state
 
   @override
   void initState() {
     super.initState();
     _initializePlayer();
+  }
+
+  void _setupVideoPlayerListener() {
+    _videoPlayerController.addListener(() {
+      if (!mounted) return;
+
+      final isPlaying = _videoPlayerController.value.isPlaying;
+
+      // Detect play/pause state change
+      if (isPlaying != _wasPlaying) {
+        _wasPlaying = isPlaying;
+        print('🎮 Video player state changed: playing=$isPlaying');
+
+        // Notify parent (only for host)
+        if (widget.isHost && widget.onPlayPause != null) {
+          widget.onPlayPause!(isPlaying);
+        }
+      }
+
+      // Detect seek (for host only)
+      if (widget.isHost && widget.onSeek != null) {
+        final currentTime = _videoPlayerController.value.position.inSeconds
+            .toDouble();
+        // Only notify on significant seeks (>2 seconds difference from widget.currentTime)
+        if ((currentTime - widget.currentTime).abs() > 2.0) {
+          widget.onSeek!(currentTime);
+        }
+      }
+    });
   }
 
   @override
@@ -48,14 +78,17 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
       if (widget.isPlaying != oldWidget.isPlaying) {
         if (widget.isPlaying && !_videoPlayerController.value.isPlaying) {
           _videoPlayerController.play();
-        } else if (!widget.isPlaying && _videoPlayerController.value.isPlaying) {
+        } else if (!widget.isPlaying &&
+            _videoPlayerController.value.isPlaying) {
           _videoPlayerController.pause();
         }
       }
 
       // Sync seek position from provider (only if difference is significant)
-      final currentPosition = _videoPlayerController.value.position.inSeconds.toDouble();
-      if ((widget.currentTime - currentPosition).abs() > 2.0) {
+      final currentPosition = _videoPlayerController.value.position.inSeconds
+          .toDouble();
+      if ((widget.currentTime - currentPosition).abs() > 1.0) {
+        print('🔄 Syncing position: $currentPosition → ${widget.currentTime}');
         _videoPlayerController.seekTo(
           Duration(seconds: widget.currentTime.round()),
         );
@@ -129,6 +162,23 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
           );
         },
       );
+
+      // Seek to initial position if currentTime > 0 (for sync when joining room)
+      if (widget.currentTime > 0) {
+        print('🎬 Seeking to initial position: ${widget.currentTime}s');
+        await _videoPlayerController.seekTo(
+          Duration(seconds: widget.currentTime.round()),
+        );
+      }
+
+      // Auto-play if host is playing
+      if (widget.isPlaying) {
+        print('▶️ Auto-playing video (host is playing)');
+        await _videoPlayerController.play();
+      }
+
+      // Setup listener to track play/pause state changes
+      _setupVideoPlayerListener();
 
       setState(() {
         _isInitialized = true;
@@ -221,7 +271,7 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
       child: Stack(
         children: [
           Chewie(controller: _chewieController!),
-          
+
           // Transparent overlay for non-host viewers to prevent control interactions
           // Video will still play and sync, but viewers cannot manually control it
           if (!widget.isHost)
@@ -239,9 +289,7 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
                       ),
                     );
                   },
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
+                  child: Container(color: Colors.transparent),
                 ),
               ),
             ),

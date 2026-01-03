@@ -243,8 +243,6 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
               ),
             ),
           ),
-
-          // Fixed bottom button
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -256,17 +254,20 @@ class _CreateWatchRoomScreenState extends State<CreateWatchRoomScreen> {
               ),
             ),
             child: SafeArea(
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _createRoom,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _createRoom,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Tạo phòng', style: TextStyle(fontSize: 16)),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Tạo phòng', style: TextStyle(fontSize: 16)),
               ),
             ),
           ),

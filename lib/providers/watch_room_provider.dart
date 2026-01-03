@@ -39,6 +39,7 @@ class WatchRoomProvider with ChangeNotifier {
   StreamSubscription? _reactionUpdatedSubscription;
   StreamSubscription? _syncResponseSubscription;
   StreamSubscription? _hostChangedSubscription;
+  StreamSubscription? _roomDeletedSubscription;
   StreamSubscription? _errorSubscription;
 
   // Getters
@@ -98,6 +99,11 @@ class WatchRoomProvider with ChangeNotifier {
       }
       _currentTime = room.videoState.currentTime;
       _isPlaying = room.videoState.isPlaying;
+
+      print(
+        '🏠 Room joined! Initial state: time=$_currentTime, playing=$_isPlaying',
+      );
+
       notifyListeners();
     });
 
@@ -116,13 +122,20 @@ class WatchRoomProvider with ChangeNotifier {
     });
 
     _videoStateSubscription = _socketService.videoStateStream.listen((data) {
-      _currentTime = (data['currentTime'] ?? 0).toDouble();
-      _isPlaying = data['isPlaying'] ?? false;
+      final newTime = (data['currentTime'] ?? 0).toDouble();
+      final newPlaying = data['isPlaying'] ?? false;
+
+      print('📺 Video state changed: time=$newTime, playing=$newPlaying');
+
+      _currentTime = newTime;
+      _isPlaying = newPlaying;
       notifyListeners();
     });
 
     _videoSeekedSubscription = _socketService.videoSeekedStream.listen((data) {
-      _currentTime = (data['currentTime'] ?? 0).toDouble();
+      final newTime = (data['currentTime'] ?? 0).toDouble();
+      print('⏩ Video seeked to: $newTime');
+      _currentTime = newTime;
       notifyListeners();
     });
 
@@ -161,8 +174,13 @@ class WatchRoomProvider with ChangeNotifier {
       data,
     ) {
       final videoState = data['videoState'];
-      _currentTime = (videoState['currentTime'] ?? 0).toDouble();
-      _isPlaying = videoState['isPlaying'] ?? false;
+      final newTime = (videoState['currentTime'] ?? 0).toDouble();
+      final newPlaying = videoState['isPlaying'] ?? false;
+
+      print('🔄 Sync response: time=$newTime, playing=$newPlaying');
+
+      _currentTime = newTime;
+      _isPlaying = newPlaying;
       _isSyncing = false;
       notifyListeners();
     });
@@ -172,6 +190,13 @@ class WatchRoomProvider with ChangeNotifier {
         // Update host information
         notifyListeners();
       }
+    });
+
+    _roomDeletedSubscription = _socketService.roomDeletedStream.listen((data) {
+      // Room was deleted by host
+      _error = data['message'];
+      leaveRoom();
+      notifyListeners();
     });
 
     _errorSubscription = _socketService.errorStream.listen((error) {
@@ -506,16 +531,17 @@ class WatchRoomProvider with ChangeNotifier {
   Future<bool> deleteRoom() async {
     if (_currentRoom == null) return false;
 
-    _setLoading(true);
-    _clearError();
-
     try {
+      // Emit socket event to delete room
+      _socketService.deleteRoom(_currentRoom!.roomId);
+
+      // Also call API to delete
       final result = await _watchRoomService.deleteWatchRoom(
         _currentRoom!.roomId,
       );
 
       if (result['success']) {
-        leaveRoom();
+        leaveRoom(notify: false);
         return true;
       } else {
         _setError(result['message']);
@@ -524,8 +550,6 @@ class WatchRoomProvider with ChangeNotifier {
     } catch (e) {
       _setError('Lỗi khi xóa phòng: $e');
       return false;
-    } finally {
-      _setLoading(false);
     }
   }
 
@@ -566,6 +590,7 @@ class WatchRoomProvider with ChangeNotifier {
     _reactionUpdatedSubscription?.cancel();
     _syncResponseSubscription?.cancel();
     _hostChangedSubscription?.cancel();
+    _roomDeletedSubscription?.cancel();
     _errorSubscription?.cancel();
 
     _socketService.dispose();

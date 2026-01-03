@@ -1,9 +1,17 @@
 /// API Configuration for the Flutter app
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConfig {
   // Base URL for the backend API
-  // Web: dùng IP thực của máy
-  static const String baseUrl = 'http://10.0.2.2:4000';
+  // Web: use localhost
+  // Android Emulator: use 10.0.2.2 (special alias for host machine)
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:4000';
+    } else {
+      return 'http://10.0.2.2:4000';
+    }
+  }
 
   // API Endpoints
   static const String authEndpoint = '/api/auth';
@@ -11,8 +19,14 @@ class ApiConfig {
   static const String commentEndpoint = '/api/comments';
   static const String movieEndpoint = '/api/movies';
 
-  // WebSocket URL for Socket.IOủa
-  static const String socketUrl = 'http://10.0.2.2:4000';
+  // WebSocket URL for Socket.IO
+  static String get socketUrl {
+    if (kIsWeb) {
+      return 'http://localhost:4000';
+    } else {
+      return 'http://10.0.2.2:4000';
+    }
+  }
 
   // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';

@@ -35,6 +35,8 @@ class SocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, dynamic>> _hostChangedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _roomDeletedController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<String> _errorController =
       StreamController<String>.broadcast();
 
@@ -55,6 +57,8 @@ class SocketService {
       _syncResponseController.stream;
   Stream<Map<String, dynamic>> get hostChangedStream =>
       _hostChangedController.stream;
+  Stream<Map<String, dynamic>> get roomDeletedStream =>
+      _roomDeletedController.stream;
   Stream<String> get errorStream => _errorController.stream;
 
   bool get isConnected => _isConnected;
@@ -140,16 +144,20 @@ class SocketService {
     // Room events
     _socket!.on('room-joined', (data) {
       try {
+        print('🔌 Socket: room-joined event received');
         // Backend sends: {room: {...}, videoState: {...}, userCount: N}
         if (data is Map) {
           final roomData = data['room'];
           if (roomData != null) {
+            print(
+              '📦 Room data: ${roomData['roomId']}, videoState: ${data['videoState']}',
+            );
             final room = WatchRoom.fromJson(roomData);
             _roomJoinedController.add(room);
           }
         }
       } catch (e) {
-        print('Error parsing room-joined: $e');
+        print('❌ Error parsing room-joined: $e');
       }
     });
 
@@ -198,6 +206,11 @@ class SocketService {
       _hostChangedController.add(Map<String, dynamic>.from(data));
     });
 
+    // Room deletion event
+    _socket!.on('room-deleted', (data) {
+      _roomDeletedController.add(Map<String, dynamic>.from(data));
+    });
+
     // Error events
     _socket!.on('error', (data) {
       _errorController.add(data['message'] ?? 'Unknown error');
@@ -222,6 +235,13 @@ class SocketService {
     if (!_isConnected || _socket == null) return;
 
     _socket!.emit('leave-room', {'roomId': roomId});
+    _currentRoomId = null;
+  }
+
+  void deleteRoom(String roomId) {
+    if (!_isConnected || _socket == null) return;
+
+    _socket!.emit('delete-room', {'roomId': roomId});
     _currentRoomId = null;
   }
 
@@ -306,6 +326,7 @@ class SocketService {
     _reactionUpdatedController.close();
     _syncResponseController.close();
     _hostChangedController.close();
+    _roomDeletedController.close();
     _errorController.close();
   }
 }

@@ -34,7 +34,8 @@ class SocketService {
                 if (user) {
                     socket.user = user;
                     socket.userId = user._id.toString();
-                    socket.username = user.name;
+                    // Use email username if name is empty
+                    socket.username = user.name || user.email?.split('@')[0] || 'Unknown';
                     socket.avatar = user.avatar || '';
                     next();
                 } else {
@@ -92,6 +93,11 @@ class SocketService {
             await this.handleSyncRequest(socket, data);
         });
 
+        // Delete room (host only)
+        socket.on('delete-room', async (data) => {
+            await this.handleDeleteRoom(socket, data);
+        });
+
         // Disconnect
         socket.on('disconnect', () => {
             this.handleDisconnect(socket);
@@ -142,19 +148,15 @@ class SocketService {
                 isHost: isHost
             };
 
-            // Check if user already in room
-            const existingUserIndex = room.currentUsers.findIndex(u => {
-                if (!u.userId) return false;
-                // Handle populated vs unpopulated userId
+            // Remove user if already in room (to avoid duplicates and stale data)
+            room.currentUsers = room.currentUsers.filter(u => {
+                if (!u || !u.userId) return false;
                 const uId = u.userId._id ? u.userId._id.toString() : u.userId.toString();
-                return uId === userIdStr;
+                return uId !== userIdStr;
             });
 
-            if (existingUserIndex !== -1) {
-                room.currentUsers[existingUserIndex] = roomUser;
-            } else {
-                room.currentUsers.push(roomUser);
-            }
+            // Add user to room with correct isHost value
+            room.currentUsers.push(roomUser);
 
             await room.save();
 
@@ -199,6 +201,13 @@ class SocketService {
 
     async handleVideoControl(socket, action, { roomId, currentTime }) {
         try {
+            console.log(`🎬 Video ${action}:`, {
+                roomId,
+                currentTime,
+                userId: socket.userId,
+                username: socket.username
+            });
+
             const room = await WatchRoom.findOne({ roomId });
             if (!room) return;
 
@@ -217,6 +226,12 @@ class SocketService {
                 updatedBy: socket.userId
             };
             await room.save();
+
+            console.log('📡 Broadcasting video-state-changed:', {
+                action,
+                currentTime: room.videoState.currentTime,
+                isPlaying: room.videoState.isPlaying
+            });
 
             // Broadcast to all users in the room
             this.io.to(roomId).emit('video-state-changed', {
@@ -339,6 +354,45 @@ class SocketService {
         }
     }
 
+    async handleDeleteRoom(socket, { roomId }) {
+        try {
+            const room = await WatchRoom.findOne({ roomId });
+            if (!room) {
+                socket.emit('error', { message: 'Phòng không tồn tại' });
+                return;
+            }
+
+            // Verify user is host
+            if (room.hostId.toString() !== socket.userId) {
+                socket.emit('error', { message: 'Chỉ host mới có thể xóa phòng' });
+                return;
+            }
+
+            // Notify all users that room is being deleted
+            this.io.to(roomId).emit('room-deleted', {
+                message: 'Host đã xóa phòng'
+            });
+
+            // Delete room
+            room.status = 'ended';
+            await room.save();
+
+            // Remove from cache
+            this.rooms.delete(roomId);
+
+            // Disconnect all sockets from room
+            const sockets = await this.io.in(roomId).fetchSockets();
+            for (const s of sockets) {
+                s.leave(roomId);
+                s.currentRoom = null;
+            }
+
+        } catch (error) {
+            console.error('Delete room error:', error);
+            socket.emit('error', { message: 'Lỗi khi xóa phòng' });
+        }
+    }
+
     async handleDisconnect(socket) {
 
 
@@ -358,19 +412,9 @@ class SocketService {
                 return u.userId.toString() !== socket.userId;
             });
 
-            // If host leaves and there are other users, transfer host
-            if (room.hostId && socket.userId && room.hostId.toString() === socket.userId && room.currentUsers.length > 0) {
-                const newHost = room.currentUsers[0];
-                room.hostId = newHost.userId;
-                newHost.isHost = true;
-
-                this.io.to(roomId).emit('host-changed', {
-                    newHost: {
-                        userId: newHost.userId,
-                        username: newHost.username
-                    }
-                });
-            }
+            // Note: Host is NOT automatically transferred when they leave
+            // Host can rejoin and retain their host privileges
+            // Room is only deleted when explicitly requested or when empty
 
             // Delete room if no users left
             if (room.currentUsers.length === 0) {

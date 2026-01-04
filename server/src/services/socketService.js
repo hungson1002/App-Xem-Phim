@@ -170,10 +170,23 @@ class SocketService {
                 sockets: (this.rooms.get(roomId)?.sockets || new Set()).add(socket.id)
             });
 
-            // Send room info to user
+            // Calculate actual current time if video is playing
+            let currentTime = room.videoState.currentTime;
+            if (room.videoState.isPlaying) {
+                const elapsedSeconds = (Date.now() - new Date(room.videoState.lastUpdated).getTime()) / 1000;
+                currentTime = room.videoState.currentTime + elapsedSeconds;
+                console.log(`🚪 User joining: stored=${room.videoState.currentTime}, elapsed=${elapsedSeconds.toFixed(1)}s, actual=${currentTime.toFixed(1)}`);
+            }
+
+            // Send room info to user with calculated current time
             socket.emit('room-joined', {
                 room: room,
-                videoState: room.videoState,
+                videoState: {
+                    currentTime: currentTime,
+                    isPlaying: room.videoState.isPlaying,
+                    lastUpdated: room.videoState.lastUpdated,
+                    updatedBy: room.videoState.updatedBy
+                },
                 userCount: room.currentUsers.length
             });
 
@@ -344,8 +357,21 @@ class SocketService {
             const room = await WatchRoom.findOne({ roomId });
             if (!room) return;
 
+            // Calculate actual current time if video is playing
+            let currentTime = room.videoState.currentTime;
+            if (room.videoState.isPlaying) {
+                const elapsedSeconds = (Date.now() - new Date(room.videoState.lastUpdated).getTime()) / 1000;
+                currentTime = room.videoState.currentTime + elapsedSeconds;
+                console.log(`⏱️ Sync request: stored=${room.videoState.currentTime}, elapsed=${elapsedSeconds.toFixed(1)}s, actual=${currentTime.toFixed(1)}`);
+            }
+
             socket.emit('sync-response', {
-                videoState: room.videoState,
+                videoState: {
+                    currentTime: currentTime,
+                    isPlaying: room.videoState.isPlaying,
+                    lastUpdated: room.videoState.lastUpdated,
+                    updatedBy: room.videoState.updatedBy
+                },
                 serverTime: Date.now()
             });
 

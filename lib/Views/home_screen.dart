@@ -171,13 +171,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           final result = await _savedMovieService
                               .toggleBookmark(slug);
                           if (result['success'] == true && mounted) {
-                            setState(() {
-                              if (wasSaved) {
-                                _savedMovieSlugs.remove(slug);
-                              } else {
-                                _savedMovieSlugs.add(slug);
-                              }
-                            });
+                            // Refresh để tạo Set mới, giúp MovieSection detect thay đổi
+                            await _refreshSavedMovies();
+
                             if (wasSaved) {
                               AppSnackBar.showWarning(
                                 context,

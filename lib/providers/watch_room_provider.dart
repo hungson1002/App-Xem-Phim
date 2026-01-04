@@ -28,6 +28,9 @@ class WatchRoomProvider with ChangeNotifier {
   bool _isPlaying = false;
   bool _isSyncing = false;
 
+  // Periodic sync timer for viewers
+  Timer? _syncTimer;
+
   // Subscriptions
   StreamSubscription? _connectionSubscription;
   StreamSubscription? _roomJoinedSubscription;
@@ -57,6 +60,7 @@ class WatchRoomProvider with ChangeNotifier {
 
   WatchRoomProvider() {
     _initializeSocketListeners();
+    _startPeriodicSync();
   }
 
   void _initializeSocketListeners() {
@@ -107,17 +111,93 @@ class WatchRoomProvider with ChangeNotifier {
       notifyListeners();
     });
 
-    _userJoinedSubscription = _socketService.userJoinedStream.listen((data) {
+    _userJoinedSubscription = _socketService.userJoinedStream.listen((
+      data,
+    ) async {
       if (_currentRoom != null) {
-        // Update user count or user list if needed
-        notifyListeners();
+        // Refresh room data to get updated user list
+        try {
+          final result = await _watchRoomService.getWatchRoom(
+            _currentRoom!.roomId,
+          );
+          if (result['success']) {
+            final updatedRoom = result['room'] as WatchRoom;
+            // Preserve episodeInfo if it exists
+            if (_currentRoom!.episodeInfo != null &&
+                updatedRoom.episodeInfo == null) {
+              _currentRoom = WatchRoom(
+                id: updatedRoom.id,
+                roomId: updatedRoom.roomId,
+                movieId: updatedRoom.movieId,
+                episodeSlug: updatedRoom.episodeSlug,
+                hostId: updatedRoom.hostId,
+                title: updatedRoom.title,
+                description: updatedRoom.description,
+                isPrivate: updatedRoom.isPrivate,
+                password: updatedRoom.password,
+                maxUsers: updatedRoom.maxUsers,
+                currentUsers: updatedRoom.currentUsers,
+                videoState: updatedRoom.videoState,
+                settings: updatedRoom.settings,
+                status: updatedRoom.status,
+                createdAt: updatedRoom.createdAt,
+                updatedAt: updatedRoom.updatedAt,
+                movieInfo: updatedRoom.movieInfo,
+                episodeInfo: _currentRoom!.episodeInfo,
+              );
+            } else {
+              _currentRoom = updatedRoom;
+            }
+            print('👥 User joined - new count: ${_currentRoom!.userCount}');
+            notifyListeners();
+          }
+        } catch (e) {
+          print('Error refreshing room on user join: $e');
+        }
       }
     });
 
-    _userLeftSubscription = _socketService.userLeftStream.listen((data) {
+    _userLeftSubscription = _socketService.userLeftStream.listen((data) async {
       if (_currentRoom != null) {
-        // Update user count or user list if needed
-        notifyListeners();
+        // Refresh room data to get updated user list
+        try {
+          final result = await _watchRoomService.getWatchRoom(
+            _currentRoom!.roomId,
+          );
+          if (result['success']) {
+            final updatedRoom = result['room'] as WatchRoom;
+            // Preserve episodeInfo if it exists
+            if (_currentRoom!.episodeInfo != null &&
+                updatedRoom.episodeInfo == null) {
+              _currentRoom = WatchRoom(
+                id: updatedRoom.id,
+                roomId: updatedRoom.roomId,
+                movieId: updatedRoom.movieId,
+                episodeSlug: updatedRoom.episodeSlug,
+                hostId: updatedRoom.hostId,
+                title: updatedRoom.title,
+                description: updatedRoom.description,
+                isPrivate: updatedRoom.isPrivate,
+                password: updatedRoom.password,
+                maxUsers: updatedRoom.maxUsers,
+                currentUsers: updatedRoom.currentUsers,
+                videoState: updatedRoom.videoState,
+                settings: updatedRoom.settings,
+                status: updatedRoom.status,
+                createdAt: updatedRoom.createdAt,
+                updatedAt: updatedRoom.updatedAt,
+                movieInfo: updatedRoom.movieInfo,
+                episodeInfo: _currentRoom!.episodeInfo,
+              );
+            } else {
+              _currentRoom = updatedRoom;
+            }
+            print('👥 User left - new count: ${_currentRoom!.userCount}');
+            notifyListeners();
+          }
+        } catch (e) {
+          print('Error refreshing room on user leave: $e');
+        }
       }
     });
 
@@ -578,8 +658,19 @@ class WatchRoomProvider with ChangeNotifier {
     return isHost(userId) || _currentRoom!.settings.allowUserControl;
   }
 
+  void _startPeriodicSync() {
+    // Request sync every 3 seconds when video is playing
+    _syncTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_currentRoom != null && _isPlaying && _isConnected) {
+        print('⏰ Auto-requesting sync...');
+        requestSync();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _syncTimer?.cancel();
     _connectionSubscription?.cancel();
     _roomJoinedSubscription?.cancel();
     _userJoinedSubscription?.cancel();

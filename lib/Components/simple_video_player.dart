@@ -33,6 +33,8 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
   bool _hasError = false;
   String _errorMessage = '';
   bool _wasPlaying = false; // Track previous playing state
+  double _lastReportedPosition =
+      0.0; // Track last reported position for seek detection
 
   @override
   void initState() {
@@ -45,6 +47,8 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
       if (!mounted) return;
 
       final isPlaying = _videoPlayerController.value.isPlaying;
+      final currentTime = _videoPlayerController.value.position.inSeconds
+          .toDouble();
 
       // Detect play/pause state change
       if (isPlaying != _wasPlaying) {
@@ -59,13 +63,20 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
 
       // Detect seek (for host only)
       if (widget.isHost && widget.onSeek != null) {
-        final currentTime = _videoPlayerController.value.position.inSeconds
-            .toDouble();
-        // Only notify on significant seeks (>2 seconds difference from widget.currentTime)
-        if ((currentTime - widget.currentTime).abs() > 2.0) {
+        // Detect significant position jumps (seek events from scrubbing or skip buttons)
+        // Check if position jumped more than 1.5 seconds from last known position
+        final timeDiff = (currentTime - _lastReportedPosition).abs();
+
+        if (timeDiff > 1.5) {
+          print(
+            '🎯 Seek detected: $_lastReportedPosition → $currentTime (diff: ${timeDiff.toStringAsFixed(1)}s)',
+          );
           widget.onSeek!(currentTime);
         }
       }
+
+      // Always update last reported position
+      _lastReportedPosition = currentTime;
     });
   }
 
@@ -74,24 +85,61 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
     super.didUpdateWidget(oldWidget);
 
     if (_isInitialized && _chewieController != null) {
+      // Debug: Log widget updates
+      if (widget.currentTime != oldWidget.currentTime ||
+          widget.isPlaying != oldWidget.isPlaying) {
+        print(
+          '📱 Widget updated - isHost: ${widget.isHost}, time: ${oldWidget.currentTime} → ${widget.currentTime}, playing: ${oldWidget.isPlaying} → ${widget.isPlaying}',
+        );
+      }
+
       // Sync play/pause state from provider
       if (widget.isPlaying != oldWidget.isPlaying) {
         if (widget.isPlaying && !_videoPlayerController.value.isPlaying) {
+          print('▶️ Syncing play state');
           _videoPlayerController.play();
         } else if (!widget.isPlaying &&
             _videoPlayerController.value.isPlaying) {
+          print('⏸️ Syncing pause state');
           _videoPlayerController.pause();
         }
       }
 
-      // Sync seek position from provider (only if difference is significant)
-      final currentPosition = _videoPlayerController.value.position.inSeconds
-          .toDouble();
-      if ((widget.currentTime - currentPosition).abs() > 1.0) {
-        print('🔄 Syncing position: $currentPosition → ${widget.currentTime}');
-        _videoPlayerController.seekTo(
-          Duration(seconds: widget.currentTime.round()),
-        );
+      // Sync seek position from provider (ONLY for non-host viewers)
+      // Host should not be synced back, as they control the video
+      if (!widget.isHost) {
+        final currentPosition = _videoPlayerController.value.position.inSeconds
+            .toDouble();
+        final timeDiff = (widget.currentTime - currentPosition).abs();
+
+        // Reduced threshold to 0.5s for more responsive sync
+        if (timeDiff > 0.5) {
+          print(
+            '🔄 Viewer syncing position: $currentPosition → ${widget.currentTime} (diff: ${timeDiff.toStringAsFixed(1)}s)',
+          );
+          _videoPlayerController.seekTo(
+            Duration(seconds: widget.currentTime.round()),
+          );
+        } else {
+          // Log when sync is skipped
+          if (widget.currentTime != oldWidget.currentTime) {
+            print(
+              '⏭️ Viewer sync skipped - diff too small: ${timeDiff.toStringAsFixed(1)}s',
+            );
+          }
+        }
+      } else {
+        // Log host position changes
+        if (widget.currentTime != oldWidget.currentTime) {
+          final currentPosition = _videoPlayerController
+              .value
+              .position
+              .inSeconds
+              .toDouble();
+          print(
+            '👑 Host position changed: widget=${widget.currentTime}, actual=$currentPosition',
+          );
+        }
       }
     }
   }
@@ -123,11 +171,11 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
         showControls: widget.enableControls,
         allowFullScreen: true,
         allowMuting: true,
-        // Disable playback controls for non-host viewers
-        allowPlaybackSpeedChanging: widget.isHost,
+        allowPlaybackSpeedChanging:
+            true, // Allow all users to change playback speed
         materialProgressColors: ChewieProgressColors(
           playedColor: Colors.red,
-          handleColor: widget.isHost ? Colors.red : Colors.grey,
+          handleColor: Colors.red, // Red handle for all users
           backgroundColor: Colors.grey,
           bufferedColor: Colors.white30,
         ),
@@ -272,25 +320,12 @@ class _SimpleVideoPlayerState extends State<SimpleVideoPlayer> {
         children: [
           Chewie(controller: _chewieController!),
 
-          // Transparent overlay for non-host viewers to prevent control interactions
-          // Video will still play and sync, but viewers cannot manually control it
+          // Block all interactions for viewers
           if (!widget.isHost)
             Positioned.fill(
-              child: IgnorePointer(
-                ignoring: false, // We want to capture gestures
-                child: GestureDetector(
-                  onTap: () {
-                    // Show temporary snackbar when viewer tries to interact
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Chỉ host mới có thể điều khiển video'),
-                        duration: Duration(seconds: 2),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  child: Container(color: Colors.transparent),
-                ),
+              child: AbsorbPointer(
+                absorbing: true, // Block ALL touch events
+                child: Container(color: Colors.transparent),
               ),
             ),
         ],

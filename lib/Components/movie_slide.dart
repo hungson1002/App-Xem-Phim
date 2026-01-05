@@ -28,21 +28,18 @@ class _MovieSlideState extends State<MovieSlide> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-      initialPage: 0,
-      viewportFraction: 0.85,
-    );
+    _pageController = PageController(viewportFraction: 0.82);
     _startAutoScroll();
   }
 
   void _startAutoScroll() {
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_pageController.hasClients) {
+      if (_pageController.hasClients && widget.movies.isNotEmpty) {
         int nextPage = (_currentPage + 1) % widget.movies.length;
         _pageController.animateToPage(
           nextPage,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
         );
       }
     });
@@ -60,199 +57,227 @@ class _MovieSlideState extends State<MovieSlide> {
     return Column(
       children: [
         SizedBox(
-          height: 500,
+          height: 420,
           child: PageView.builder(
             controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
+            onPageChanged: (index) => setState(() => _currentPage = index),
             itemCount: widget.movies.length,
             itemBuilder: (context, index) {
-              // Hiệu ứng phóng to cho item ở giữa
-              double scale = 1.0;
-              if (_pageController.hasClients && _pageController.position.haveDimensions) {
-                double page = _pageController.page ?? 0;
-                scale = 1.0 - ((page - index).abs() * 0.15).clamp(0.0, 0.15);
-              }
+              final isActive = _currentPage == index;
+              final movie = widget.movies[index];
 
-              return TweenAnimationBuilder(
-                tween: Tween<double>(begin: scale, end: scale),
-                duration: const Duration(milliseconds: 350),
-                builder: (context, double value, child) {
-                  return Transform.scale(
-                    scale: value,
-                    child: child,
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              return AnimatedScale(
+                scale: isActive ? 1.0 : 0.92,
+                duration: const Duration(milliseconds: 300),
+                child: AnimatedOpacity(
+                  opacity: isActive ? 1.0 : 0.5,
+                  duration: const Duration(milliseconds: 300),
                   child: GestureDetector(
                     onTap: () => widget.onMovieTap?.call(index),
                     child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF5BA3F5).withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 8),
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.6),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 10,
                       ),
-                      child: Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.1),
-                                width: 2,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF6C63FF,
+                                  ).withOpacity(0.25),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Background Image
+                            Image.network(
+                              movie['image']!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: const Color(0xFF1a1a2e),
+                                child: const Icon(
+                                  Icons.movie,
+                                  size: 60,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(22),
-                              child: Image.network(
-                                widget.movies[index]['image']!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Colors.grey[900]!,
-                                          Colors.grey[800]!,
+
+                            // Gradient overlay
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withOpacity(0.95),
+                                  ],
+                                  stops: const [0.0, 0.4, 0.7, 1.0],
+                                ),
+                              ),
+                            ),
+
+                            // Top row: Rating & Bookmark
+                            Positioned(
+                              top: 14,
+                              left: 14,
+                              right: 14,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Rating badge
+                                  if (movie['rating'] != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.star,
+                                            size: 14,
+                                            color: Colors.black87,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            movie['rating']!,
+                                            style: const TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    ),
-                                    child: const Center(
+                                    )
+                                  else
+                                    const SizedBox(),
+
+                                  // Bookmark
+                                  GestureDetector(
+                                    onTap: () => widget.onBookmark?.call(index),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black38,
+                                        shape: BoxShape.circle,
+                                      ),
                                       child: Icon(
-                                        Icons.movie_rounded,
-                                        size: 100,
-                                        color: Colors.grey,
+                                        (widget.bookmarkedStates?[index] ??
+                                                false)
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color:
+                                            (widget.bookmarkedStates?[index] ??
+                                                false)
+                                            ? Colors.amber
+                                            : Colors.white,
+                                        size: 22,
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withOpacity(0.3),
-                                  Colors.black.withOpacity(0.9),
+                                  ),
                                 ],
-                                stops: const [0.4, 0.7, 1.0],
                               ),
                             ),
-                          ),
 
-                          Positioned(
-                            top: 20,
-                            right: 20,
-                            child: GestureDetector(
-                              onTap: () => widget.onBookmark?.call(index),
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: (widget.bookmarkedStates?[index] ?? false)
-                                      ? const Color(0xFF5BA3F5)
-                                      : Colors.black.withOpacity(0.6),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  (widget.bookmarkedStates?[index] ?? false)
-                                      ? Icons.bookmark
-                                      : Icons.bookmark_border,
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          Positioned(
-                            bottom: 24,
-                            left: 24,
-                            right: 24,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  widget.movies[index]['title']!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 10,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: const Color(0xFF5BA3F5).withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    '${widget.movies[index]['year']} • ${widget.movies[index]['genre']}',
+                            // Bottom content
+                            Positioned(
+                              bottom: 16,
+                              left: 16,
+                              right: 16,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Title
+                                  Text(
+                                    movie['title'] ?? '',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.2,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Tags row
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 6,
+                                    children: [
+                                      if (movie['year'] != null)
+                                        _buildTag(movie['year']!),
+                                      if (movie['genre'] != null)
+                                        _buildTag(movie['genre']!),
+                                      if (movie['quality'] != null)
+                                        _buildTag(
+                                          movie['quality']!,
+                                          highlight: true,
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // Play button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () =>
+                                          widget.onMovieTap?.call(index),
+                                      icon: const Icon(
+                                        Icons.play_arrow_rounded,
+                                        size: 22,
+                                      ),
+                                      label: const Text(
+                                        'Xem ngay',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF6C63FF,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -262,126 +287,49 @@ class _MovieSlideState extends State<MovieSlide> {
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
 
+        // Dots indicator
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             widget.movies.length,
-            (index) => AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              width: _currentPage == index ? 32 : 8,
+            (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: _currentPage == i ? 22 : 8,
               height: 8,
               decoration: BoxDecoration(
-                gradient: _currentPage == index
-                    ? const LinearGradient(
-                        colors: [Color(0xFF5BA3F5), Color(0xFF7DB8F7)],
-                      )
-                    : null,
-                color: _currentPage == index ? null : Colors.grey[700],
+                color: _currentPage == i
+                    ? const Color(0xFF6C63FF)
+                    : Colors.grey[700],
                 borderRadius: BorderRadius.circular(4),
-                boxShadow: _currentPage == index
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF5BA3F5).withOpacity(0.5),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
               ),
             ),
           ),
         ),
-
-        const SizedBox(height: 24),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF5BA3F5), Color(0xFF7DB8F7)],
-                ),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5BA3F5).withOpacity(0.4),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => widget.onMovieTap?.call(_currentPage),
-                icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                label: const Text(
-                  'Phát',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 36,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => widget.onBookmark?.call(_currentPage),
-                icon: const Icon(Icons.add_rounded, size: 24),
-                label: const Text(
-                  'Danh sách',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A1A2E),
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  Widget _buildTag(String text, {bool highlight = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: highlight
+            ? const Color(0xFF6C63FF).withOpacity(0.9)
+            : Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: highlight ? null : Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: highlight ? FontWeight.w600 : FontWeight.w500,
+        ),
+      ),
     );
   }
 }

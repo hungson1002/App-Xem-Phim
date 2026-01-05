@@ -13,8 +13,16 @@ class EpisodeData {
   final String name;
   final String? slug;
   final bool isWatched;
+  final String linkEmbed;
+  final String linkM3u8;
 
-  const EpisodeData({required this.name, this.slug, this.isWatched = false});
+  const EpisodeData({
+    required this.name,
+    this.slug,
+    this.isWatched = false,
+    this.linkEmbed = '',
+    this.linkM3u8 = '',
+  });
 }
 
 /// Widget hiển thị danh sách server và tập phim

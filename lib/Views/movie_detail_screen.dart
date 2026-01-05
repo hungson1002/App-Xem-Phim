@@ -6,11 +6,13 @@ import '../Components/custom_button.dart';
 import '../Components/episode_server_list.dart';
 import '../Components/movie_genre_tags.dart';
 import '../Components/cached_image_widget.dart';
+import '../Components/related_movies_list.dart';
 import '../models/movie_detail_model.dart';
 import '../models/movie_model.dart';
 import '../services/movie_service.dart';
 import '../services/saved_movie_service.dart';
 import '../utils/app_snackbar.dart';
+import 'video_player_screen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final String movieId; // This should be slug
@@ -205,7 +207,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     final year = _movieDetail?.year ?? widget.movie?.year ?? 0;
     final time = _movieDetail?.time ?? widget.movie?.time ?? '';
     final quality = _movieDetail?.quality ?? widget.movie?.quality ?? 'HD';
-    final categories = _movieDetail?.category ?? widget.movie?.category ?? [];
+
+    // Extract category names for display
+    final categoryNames =
+        _movieDetail?.category.map((c) => c.name).toList() ??
+        widget.movie?.category ??
+        [];
+
+    // Extract first category slug for related movies
+    final firstCategorySlug = _movieDetail?.category.isNotEmpty == true
+        ? _movieDetail!.category.first.slug
+        : '';
+
     final content =
         _movieDetail?.content ?? widget.movie?.content ?? 'Chưa có mô tả.';
 
@@ -315,7 +328,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 children: [
                   // Genre Tags and Rating
                   MovieGenreTags(
-                    genres: categories.isNotEmpty ? categories : ['Phim'],
+                    genres: categoryNames.isNotEmpty ? categoryNames : ['Phim'],
                     rating: 8.5,
                   ),
 
@@ -420,7 +433,26 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       Expanded(
                         child: CustomButton(
                           text: 'Xem ngay',
-                          onPressed: () {},
+                          onPressed: () {
+                            if (_servers.isNotEmpty &&
+                                _servers[0].episodes.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => VideoPlayerScreen(
+                                    movieDetail: _movieDetail!,
+                                    initialServerIndex: 0,
+                                    initialEpisodeIndex: 0,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              AppSnackBar.showError(
+                                context,
+                                'Chưa có tập phim nào',
+                              );
+                            }
+                          },
                           backgroundColor: const Color(0xFF5BA3F5),
                         ),
                       ),
@@ -520,11 +552,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     currentServerIndex: _currentServerIndex,
                     currentEpisodeIndex: _currentEpisodeIndex,
                     onEpisodeTap: (serverIndex, episodeIndex) {
-                      setState(() {
-                        _currentServerIndex = serverIndex;
-                        _currentEpisodeIndex = episodeIndex;
-                      });
-                      // TODO: Navigate to video player
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VideoPlayerScreen(
+                            movieDetail: _movieDetail!,
+                            initialServerIndex: serverIndex,
+                            initialEpisodeIndex: episodeIndex,
+                          ),
+                        ),
+                      );
                     },
                   ),
 
@@ -545,37 +582,19 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Related Movies
-                  Text(
-                    'Có thể bạn thích',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 5,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: CachedImageWidget(
-                            imageUrl:
-                                'https://picsum.photos/130/160?random=$index',
-                            width: 130,
-                            height: 160,
-                            borderRadius: BorderRadius.circular(8),
-                            fit: BoxFit.cover,
-                          ),
-                        );
-                      },
-                    ),
+                  // Related Movies (Replaced with new component)
+                  RelatedMoviesList(
+                    categorySlug: firstCategorySlug,
+                    currentMovieId: widget.movieId,
+                    onMovieTap: (slug) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MovieDetailScreen(movieId: slug),
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 80),

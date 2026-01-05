@@ -16,7 +16,7 @@ class MovieDetail {
   final String quality;
   final String lang;
   final String trailerUrl;
-  final List<String> category;
+  final List<Category> category; // Changed from List<String>
   final List<String> country;
   final List<String> actors;
   final List<String> directors;
@@ -47,6 +47,19 @@ class MovieDetail {
   });
 
   factory MovieDetail.fromJson(Map<String, dynamic> json) {
+    List<Category> parseCategories(dynamic listData) {
+      if (listData == null) return [];
+      if (listData is List) {
+        return listData.map((item) {
+          if (item is Map) {
+            return Category.fromJson(item as Map<String, dynamic>);
+          }
+          return Category(name: item.toString(), slug: '');
+        }).toList();
+      }
+      return [];
+    }
+
     List<String> parseListNames(dynamic listData) {
       if (listData == null) return [];
       if (listData is List) {
@@ -102,12 +115,23 @@ class MovieDetail {
       quality: json['quality'] ?? '',
       lang: json['lang'] ?? '',
       trailerUrl: json['trailer_url'] ?? '',
-      category: parseListNames(json['category']),
+      category: parseCategories(json['category']),
       country: parseListNames(json['country']),
       actors: parseStringList(json['actor']),
       directors: parseStringList(json['director']),
       episodes: parseEpisodes(json['episodes']),
     );
+  }
+}
+
+class Category {
+  final String name;
+  final String slug;
+
+  Category({required this.name, required this.slug});
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(name: json['name'] ?? '', slug: json['slug'] ?? '');
   }
 }
 

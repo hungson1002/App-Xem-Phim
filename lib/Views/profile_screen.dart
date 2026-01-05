@@ -7,10 +7,12 @@ import '../Components/bottom_navbar.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../theme_provider.dart';
+import '../utils/app_snackbar.dart';
 import 'bookmark_screen.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'search_screen.dart';
+import 'watch_rooms_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,7 +22,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final int _currentIndex = 3;
+  final int _currentIndex = 4;
   final AuthService _authService = AuthService();
   User? _user;
   bool _isLoading = true;
@@ -55,6 +57,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         case 2:
           destination = const BookmarkScreen();
           break;
+        case 3:
+          destination = const WatchRoomsScreen();
+          break;
         default:
           return;
       }
@@ -68,13 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _logout() async {
     await _authService.logout();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã đăng xuất thành công!'),
-          backgroundColor: Colors.blue,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Đã đăng xuất thành công!');
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),

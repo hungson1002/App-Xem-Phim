@@ -39,6 +39,14 @@ dependencies:
   shared_preferences: ^2.2.2
   google_sign_in: ^6.2.1
   image_picker: ^1.0.7
+  cached_network_image: ^3.3.1
+  video_player: ^2.8.1
+  chewie: ^1.7.4
+  socket_io_client: ^2.0.3+1
+  app_links: ^6.3.2
+  share_plus: ^10.1.4
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -64,8 +72,10 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-  - Assets/Images/
-  #   - images/a_dot_ham.jpeg
+    - assets/img/avt1.png
+    - assets/img/avt2.png
+    - assets/img/avt3.png
+    - assets/img/avt4.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'cached_image_widget.dart';
 
 class BookmarkCard extends StatelessWidget {
   final String title;
@@ -31,60 +32,62 @@ class BookmarkCard extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: onTap,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: NetworkImage(imageUrl),
+                child: Stack(
+                  children: [
+                    CachedImageWidget(
+                      imageUrl: imageUrl,
                       fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Rating Badge
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFC107),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.black, size: 12),
-                              SizedBox(width: 4),
-                              Text(
-                                '8.8',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
+
+                    // Rating Badge
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFC107),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.black, size: 12),
+                            SizedBox(width: 4),
+                            Text(
+                              '8.8',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      // Play Button Overlay
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF5BA3F5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                    ),
+                    // Play Button Overlay
+                    Center(
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF5BA3F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -125,11 +128,7 @@ class BookmarkCard extends StatelessWidget {
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-                size: 16,
-              ),
+              child: const Icon(Icons.delete, color: Colors.white, size: 16),
             ),
           ),
         ),

@@ -1,0 +1,81 @@
+# Kỹ thuật Image Proxy Streaming
+
+Tài liệu này giải thích chi tiết về kỹ thuật **Image Proxy** được sử dụng trong dự án để giải quyết vấn đề tải ảnh trên môi trường Android Emulator, giúp bạn tự tin trả lời các câu hỏi trong buổi bảo vệ đồ án.
+
+## 1. Vấn đề (Problem Statement)
+Trong quá trình phát triển (Development), chúng ta gặp phải một rào cản kỹ thuật đặc thù:
+- **Môi trường**: Ứng dụng chạy trên **Android Emulator**.
+- **Hiện tượng**: Không thể tải được ảnh từ các nguồn bên ngoài (như `phimimg.com`), trong khi vẫn gọi được API từ `localhost` (máy tính của bạn).
+- **Nguyên nhân**:
+    1.  **Network Restrictions**: Emulator chạy trong một mạng ảo (Virtual Network) đằng sau NAT. Đối với một số domain hoặc cấu hình mạng cụ thể (đặc biệt khi dùng Wifi doanh nghiệp hoặc VPN), Emulator có thể gặp lỗi DNS hoặc bị chặn kết nối ra ngoài (Outbound Traffic).
+    2.  **CORS & Secure Content**: Một số server ảnh chặn request từ nguồn "lạ" hoặc yêu cầu Headers đặc biệt mà `Image.network` của Flutter mặc định không gửi đi.
+
+## 2. Giải pháp: Reverse Proxy (Cầu nối trung gian)
+Thay vì để **Android Emulator** tự mình kết nối ra Internet để lấy ảnh, chúng ta sử dụng **Backend (Node.js)** của mình làm trung gian.
+
+### Mô hình hoạt động:
+**Trước khi fix (Lỗi):**
+`App (Emulator)` ❌ ---> `Internet` ---> `Server Ảnh (phimimg.com)`
+
+**Sau khi fix (Proxy):**
+`App (Emulator)` ✅ ---> `Backend (Localhost)` ✅ ---> `Internet` ---> `Server Ảnh (phimimg.com)`
+
+*Vì Backend chạy trên máy tính thật (Host Machine) nên có kết nối mạng ổn định và đầy đủ quyền truy cập.*
+
+## 3. Chi tiết Kỹ thuật (Implementation Details)
+
+### A. Backend (Node.js + Express)
+Chúng ta sử dụng kỹ thuật **Streaming Pipe**.
+
+```javascript
+import https from 'https';
+
+app.get('/api/proxy/image', (req, res) => {
+  const { url } = req.query;
+  
+  // 1. Backend đóng vai trò là Client đi tải ảnh
+  https.get(url, (response) => {
+    
+    // 2. Copy Header 'content-type' (image/jpeg, image/png...) để trả về cho App
+    res.set('Content-Type', response.headers['content-type']);
+    
+    // 3. Kỹ thuật PIPING (Quan trọng):
+    // Thay vì tải toàn bộ ảnh về bộ nhớ RAM rồi mới gửi đi (gây tốn RAM),
+    // ta nối "ống dẫn" (pipe) dòng dữ liệu trực tiếp từ nguồn xuống đích.
+    // Byte nào tải về được là gửi ngay cho App.
+    response.pipe(res);
+
+  }).on('error', (err) => {
+    // Xử lý lỗi
+  });
+});
+```
+
+**Từ khóa đắt giá đê trả lời giảng viên:**
+- **Streaming/Piping**: Tối ưu bộ nhớ, không cần lưu file trung gian, độ trễ thấp (low latency).
+- **Passthrough Proxy**: Backend không chỉnh sửa ảnh, chỉ chuyển tiếp dữ liệu.
+
+### B. Frontend (Flutter)
+Client cần thông minh để biết khi nào cần dùng Proxy.
+
+```dart
+// Nếu là link ảnh bên ngoài (http...)
+if (!finalUrl.contains('localhost') && !finalUrl.contains('10.0.2.2')) {
+   // Mã hóa URL gốc để tránh lỗi ký tự đặc biệt
+   final encodedUrl = Uri.encodeComponent(finalUrl);
+   
+   // Chuyển hướng request về Proxy Server của mình
+   finalUrl = '${ApiConfig.baseUrl}/api/proxy/image?url=$encodedUrl';
+}
+```
+
+## 4. Ưu điểm & Ứng dụng thực tế
+Nếu giảng viên hỏi *"Tại sao không sửa mạng Emulator mà phải code thêm?"*, bạn có thể trả lời:
+1.  **Độ ổn định (Reliability)**: Giải pháp này hoạt động trên mọi máy của mọi lập trình viên trong team, không phụ thuộc vào cấu hình mạng của từng người.
+2.  **Khả năng mở rộng (Future Proof)**:
+    - Có thể thêm tính năng **Caching** trên server để tiết kiệm băng thông.
+    - Có thể **Resize/Optimize** ảnh trên server trước khi trả về mobile để app chạy nhanh hơn.
+    - Có thể **Giấu nguồn ảnh gốc** (Security) nếu cần.
+
+---
+Đây là một giải pháp tiêu chuẩn (Standard Practice) trong phát triển phần mềm khi gặp vấn đề về Cross-Origin hoặc Network Restriction.

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../utils/app_snackbar.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final User user;
@@ -74,12 +75,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi chọn ảnh: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, 'Lỗi chọn ảnh: ${e.toString()}');
       }
     }
   }
@@ -191,12 +187,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // Check password confirmation
     if (_passwordController.text.isNotEmpty &&
         _passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mật khẩu xác nhận không khớp'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppSnackBar.showError(context, 'Mật khẩu xác nhận không khớp');
       return;
     }
 
@@ -218,22 +209,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (response.success) {
       widget.onProfileUpdated();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cập nhật hồ sơ thành công!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Cập nhật hồ sơ thành công!');
         Navigator.pop(context);
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response.message ?? 'Có lỗi xảy ra'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, response.message ?? 'Có lỗi xảy ra');
       }
     }
   }

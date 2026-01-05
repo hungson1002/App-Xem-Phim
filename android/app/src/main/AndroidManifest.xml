@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="fe"
+        android:label="WatchAlong"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
 
@@ -25,6 +25,23 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- Custom Scheme Deep Link -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="appxemphim" />
+            </intent-filter>
+
+            <!-- App Link (Universal Link) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="watchalong428.vercel.app" />
+                <data android:scheme="https" android:host="watchalong428.vercel.app" />
             </intent-filter>
         </activity>
 

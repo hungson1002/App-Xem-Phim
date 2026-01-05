@@ -43,22 +43,21 @@ class CommentService {
         return null;
       }
 
-      print("🔵 Đang gửi đến: ${ApiConfig.addCommentUrl}");
+      print("Đang gửi đến: ${ApiConfig.addCommentUrl}");
 
-      final response = await http.post(
-        Uri.parse(ApiConfig.addCommentUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'movieId': movieId,
-          'content': content,
-        }),
-      ).timeout(ApiConfig.timeout);
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.addCommentUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'movieId': movieId, 'content': content}),
+          )
+          .timeout(ApiConfig.timeout);
 
-      print("🔵 Status Code: ${response.statusCode}");
-      print("🔵 Server Response: ${response.body}");
+      print("Status Code: ${response.statusCode}");
+      print("Server Response: ${response.body}");
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -68,12 +67,57 @@ class CommentService {
       }
 
       // Nếu không phải 201 thì in ra lỗi để biết đường sửa
-      print("GỬI THẤT BẠI. Code: ${response.statusCode}, Lý do: ${response
-          .body}");
+      print(
+        "GỬI THẤT BẠI. Code: ${response.statusCode}, Lý do: ${response.body}",
+      );
       return null;
     } catch (e) {
       print('LỖI KẾT NỐI (Socket/Timeout): $e');
       return null;
+    }
+  }
+
+  // Xóa bình luận
+  Future<bool> deleteComment(String movieId, String commentId) async {
+    try {
+      final token = await _authService.getToken();
+      final url = '${ApiConfig.baseUrl}/api/comments/$movieId/$commentId';
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error deleting comment: $e');
+      return false;
+    }
+  }
+
+  // Sửa bình luận
+  Future<bool> updateComment(
+    String movieId,
+    String commentId,
+    String newContent,
+  ) async {
+    try {
+      final token = await _authService.getToken();
+      final url = '${ApiConfig.baseUrl}/api/comments/$movieId/$commentId';
+
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'content': newContent}),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating comment: $e');
+      return false;
     }
   }
 }

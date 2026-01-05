@@ -11,7 +11,7 @@ export const verifyToken = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // --- QUAN TRỌNG: In ra để kiểm tra xem Token chứa key gì ---
-        console.log("🔥 Check Token Decoded:", decoded);
+        console.log("Check Token Decoded:", decoded);
 
         // Thử lấy ID từ các key phổ biến (id, _id, userId, authID)
         // Dù lúc Login bạn lưu tên gì thì dòng này cũng bắt được hết

@@ -10,10 +10,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Đăng ký
 export const Register = async (req, res, next) => {
     try {
-        // Lấy dữ liệu từ client gửi lên
         const { name, email, password } = req.body;
 
-        // Kiểm tra email có tồn tại không
         const exitAuth = await Auth.findOne({ email });
         if (exitAuth) {
             return res.status(400).json({
@@ -67,10 +65,8 @@ export const Register = async (req, res, next) => {
 // Đăng nhập
 export const Login = async (req, res, next) => {
     try {
-        //Lấy email và password từ client
         const { email, password } = req.body;
 
-        // Kiểm tra email có tồn tại không
         const auth = await Auth.findOne({ email });
         if (!auth) {
             return res.status(401).json({
@@ -158,7 +154,6 @@ export const VerifyEmail = async (req, res, next) => {
 
 export const GoogleLogin = async (req, res, next) => {
     try {
-        // Lấy gg token từ fe
         const { googleToken } = req.body;
 
         console.log('Google Login - Received token:', googleToken ? 'Yes' : 'No');
@@ -244,10 +239,8 @@ export const GoogleLogin = async (req, res, next) => {
 // Gửi lại otp xác thực email
 export const ResendVerifyOTP = async (req, res, next) => {
     try {
-        // Lấy email từ client
         const { email } = req.body;
 
-        // Tìm user theo email
         const auth = await Auth.findOne({ email });
 
         // Kiểm tra email có tồn tại không
@@ -310,10 +303,8 @@ export const ResendVerifyOTP = async (req, res, next) => {
 // Gửi otp đặt lại mật khẩu
 export const ForgotPassword = async (req, res, next) => {
     try {
-        // Lấy email từ client
         const { email } = req.body;
 
-        // tìm user theo email
         const auth = await Auth.findOne({ email });
 
         if (!auth) {

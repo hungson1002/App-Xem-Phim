@@ -1,0 +1,106 @@
+{
+  "status": true,
+  "msg": "done",
+  "movie": {
+    "tmdb": {
+      "type": "movie",
+      "id": "1212271",
+      "season": null,
+      "vote_average": 6.948,
+      "vote_count": 67
+    },
+    "imdb": {
+      "id": null
+    },
+    "created": {
+      "time": "2025-12-25T21:38:45.000Z"
+    },
+    "modified": {
+      "time": "2025-12-25T21:39:04.000Z"
+    },
+    "_id": "7ba77854a96f6a3182fc526ae3018403",
+    "name": "94 Chưa Phải Là Hết",
+    "slug": "94-chua-phai-la-het",
+    "origin_name": "Eleanor The Great",
+    "content": "Khi tham gia nhóm cộng đồng, Eleanor đã mạo nhận câu chuyện về nạn diệt chủng Do Thái của người bạn quá cố. Chuyện tưởng như chẳng có gì, nhưng việc đó lại ảnh hưởng đến bà và nhiều người xung quanh.",
+    "type": "single",
+    "status": "completed",
+    "poster_url": "https://phimimg.com/upload/vod/20251225-1/8a7e53000cfa417591e52cc1b127635e.jpg",
+    "thumb_url": "https://phimimg.com/upload/vod/20251225-1/1c360c6b20de90f9b49b994602364bc5.jpg",
+    "is_copyright": false,
+    "sub_docquyen": false,
+    "chieurap": false,
+    "trailer_url": "https://www.youtube.com/watch?v=wZ6l2ue--KA",
+    "time": "98 phút",
+    "episode_current": "Full",
+    "episode_total": "1",
+    "quality": "FHD",
+    "lang": "Vietsub",
+    "notify": "",
+    "showtimes": "",
+    "year": 2025,
+    "view": 0,
+    "actor": [
+      "June Squibb",
+      "Erin Kellyman",
+      "Chiwetel Ejiofor",
+      "Jessica Hecht",
+      "Rita Zohar",
+      "Will Price",
+      "Lia Lando",
+      "Greg Kaston",
+      "Michael Everett Johnson",
+      "Marcha Kia",
+      "Cole Tristan Murphy",
+      "Stephen Singer",
+      "Vince Edgehill",
+      "Luis Castro de Leon",
+      "Jacob Flekier",
+      "Kathryn Mayer",
+      "Cole"
+    ],
+    "director": [
+      "Scarlett Johansson"
+    ],
+    "category": [
+      {
+        "id": "37a7b38b6184a5ebd3c43015aa20709d",
+        "name": "Chính Kịch",
+        "slug": "chinh-kich"
+      },
+      {
+        "id": "bb2b4b030608ca5984c8dd0770f5b40b",
+        "name": "Tình Cảm",
+        "slug": "tinh-cam"
+      },
+      {
+        "id": "a7b065b92ad356387ef2e075dee66529",
+        "name": "Tâm Lý",
+        "slug": "tam-ly"
+      }
+    ],
+    "country": [
+      {
+        "id": "74d9fa92f4dea9ecea8fc2233dc7921a",
+        "name": "Âu Mỹ",
+        "slug": "au-my"
+      }
+    ],
+    "webp_poster": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251225-1/8a7e53000cfa417591e52cc1b127635e.jpg",
+    "webp_thumb": "https://phimapi.com/image.php?url=https://phimimg.com/upload/vod/20251225-1/1c360c6b20de90f9b49b994602364bc5.jpg"
+  },
+  "episodes": [
+    {
+      "server_name": "#Hà Nội (Vietsub)",
+      "server_data": [
+        {
+          "name": "Full",
+          "slug": "full",
+          "filename": "94 Chưa Phải Là Hết - Eleanor The Great - 2025 - 1080p - Vietsub - Full",
+          "link_embed": "https://player.phimapi.com/player/?url=https://s6.kkphimplayer6.com/20251225/UHtfJqmU/index.m3u8",
+          "link_m3u8": "https://s6.kkphimplayer6.com/20251225/UHtfJqmU/index.m3u8"
+        }
+      ]
+    }
+  ]
+}

@@ -1,10 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../Components/bottom_navbar.dart';
-import '../Components/movie_card.dart';
+import '../Components/search_bar_widget.dart';
+import '../Components/category_filter_list.dart';
+import '../Components/search_results_grid.dart';
+import '../models/movie_model.dart';
+import '../services/movie_service.dart';
+import '../services/saved_movie_notifier.dart';
+import '../utils/app_snackbar.dart';
 import 'bookmark_screen.dart';
 import 'movie_detail_screen.dart';
 import 'profile_screen.dart';
+import 'watch_rooms_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,49 +23,230 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final MovieService _movieService = MovieService();
+  final ScrollController _scrollController = ScrollController();
+
   int _currentIndex = 1;
 
-  final List<Map<String, String>> _searchResults = [
-    {
-      'title': 'Avengers: Endgame',
-      'year': '2019',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/avengers1/200/300',
-    },
-    {
-      'title': 'Avengers: Infinity War',
-      'year': '2018',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/avengers2/200/300',
-    },
-    {
-      'title': 'The Avengers',
-      'year': '2012',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/avengers3/200/300',
-    },
-    {
-      'title': 'Avengers: Age of Ultron',
-      'year': '2015',
-      'genre': 'Hành động',
-      'image': 'https://picsum.photos/seed/avengers4/200/300',
-    },
-  ];
+  // Data State
+  List<Movie> _movies = [];
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  String _searchQuery = '';
+
+  // Pagination State
+  int _currentPage = 1;
+  bool _hasMore = true;
+  static const int _limit = 20;
+
+  Timer? _debounce;
+
+  // Categories
+  final Map<String, String> _categorySlugs = {
+    'Tất cả': '',
+    'Hành động': 'hanh-dong',
+    'Tình cảm': 'tinh-cam',
+    'Kinh dị': 'kinh-di',
+    'Hoạt hình': 'hoat-hinh',
+    'Viễn tưởng': 'vien-tuong',
+  };
+
+  late List<String> _categories;
+  String _selectedCategory = 'Tất cả';
+
+  @override
+  void initState() {
+    super.initState();
+    _categories = _categorySlugs.keys.toList();
+
+    savedMovieNotifier.addListener(_onSavedMoviesChanged);
+    if (!savedMovieNotifier.isLoaded) {
+      savedMovieNotifier.loadSavedMovies();
+    }
+
+    _scrollController.addListener(_onScroll);
+
+    // Load initial data (Browse Mode)
+    _loadMovies();
+  }
+
+  @override
+  void dispose() {
+    savedMovieNotifier.removeListener(_onSavedMoviesChanged);
+    _scrollController.dispose();
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSavedMoviesChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoading && !_isLoadingMore && _hasMore) {
+        _loadMoreMovies();
+      }
+    }
+  }
+
+  Future<void> _loadMovies() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      List<Movie> newMovies;
+
+      // If searching
+      if (_searchQuery.isNotEmpty) {
+        newMovies = await _movieService.searchMovies(
+          _searchQuery,
+          page: 1,
+          limit: _limit,
+        );
+      } else {
+        // Browse Mode
+        if (_selectedCategory == 'Tất cả') {
+          // Empty query returns all movies (Browse Mode)
+          newMovies = await _movieService.searchMovies(
+            '',
+            page: 1,
+            limit: _limit,
+          );
+        } else {
+          // Filter by category
+          final slug = _categorySlugs[_selectedCategory]!;
+          newMovies = await _movieService.getMoviesByCategory(
+            slug,
+            page: 1,
+            limit: _limit,
+          );
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _movies = newMovies;
+          _currentPage = 1;
+          _hasMore = newMovies.length >= _limit;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading movies: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreMovies() async {
+    if (_isLoadingMore) return;
+    setState(() => _isLoadingMore = true);
+
+    try {
+      List<Movie> newMovies;
+      final nextPage = _currentPage + 1;
+
+      if (_searchQuery.isNotEmpty) {
+        newMovies = await _movieService.searchMovies(
+          _searchQuery,
+          page: nextPage,
+          limit: _limit,
+        );
+      } else {
+        if (_selectedCategory == 'Tất cả') {
+          newMovies = await _movieService.searchMovies(
+            '',
+            page: nextPage,
+            limit: _limit,
+          );
+        } else {
+          final slug = _categorySlugs[_selectedCategory]!;
+          newMovies = await _movieService.getMoviesByCategory(
+            slug,
+            page: nextPage,
+            limit: _limit,
+          );
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _movies.addAll(newMovies);
+          _currentPage = nextPage;
+          _hasMore = newMovies.length >= _limit;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading more movies: $e');
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Update query instantly for UI input
+    setState(() {
+      _searchQuery = query;
+    });
+
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      // Reset and reload
+      _loadMovies();
+    });
+  }
+
+  void _onCategorySelected(String category) {
+    if (_selectedCategory == category) return;
+
+    setState(() {
+      _selectedCategory = category;
+      _searchController.clear();
+      _searchQuery = ''; // Reset search when changing category
+    });
+
+    _loadMovies();
+  }
+
+  Future<void> _toggleSaveMovie(Movie movie) async {
+    final slug = movie.slug;
+    final isCurrentlySaved = savedMovieNotifier.isMovieSaved(slug);
+
+    if (isCurrentlySaved) {
+      final success = await savedMovieNotifier.removeSavedMovie(slug);
+      if (success && mounted) {
+        AppSnackBar.showSuccess(context, 'Đã xóa khỏi danh sách lưu');
+      } else if (mounted) {
+        AppSnackBar.showError(context, 'Không thể xóa phim');
+      }
+    } else {
+      final success = await savedMovieNotifier.saveMovie(slug);
+      if (success && mounted) {
+        AppSnackBar.showSuccess(context, 'Đã lưu phim thành công');
+      } else if (mounted) {
+        AppSnackBar.showError(context, 'Không thể lưu phim');
+      }
+    }
+  }
 
   void _onNavBarTap(int index) {
     if (index == _currentIndex) return;
 
     if (index == 0) {
-      // Quay về trang chủ
       Navigator.popUntil(context, (route) => route.isFirst);
     } else {
-      // Chuyển đến tab khác
       Widget destination;
       switch (index) {
         case 2:
           destination = const BookmarkScreen();
           break;
         case 3:
+          destination = const WatchRoomsScreen();
+          break;
+        case 4:
           destination = const ProfileScreen();
           break;
         default:
@@ -81,7 +270,7 @@ class _SearchScreenState extends State<SearchScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar
+            // Search Bar Component
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -94,201 +283,62 @@ class _SearchScreenState extends State<SearchScreen> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1A2332) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search,
-                            color: isDark ? Colors.grey : Colors.black54,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              style: TextStyle(
-                                color: isDark ? Colors.white : Colors.black,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Tìm phim, diễn viên, đạo diễn...',
-                                hintStyle: TextStyle(
-                                  color: isDark ? Colors.grey : Colors.black45,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.mic,
-                            color: isDark ? Colors.grey : Colors.black54,
-                          ),
-                        ],
-                      ),
+                    child: SearchBarWidget(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onFilterTap: () {
+                        // Optional: Show filter dialog
+                      },
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.tune,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                    onPressed: () {},
                   ),
                 ],
               ),
             ),
 
-            // Category Chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildCategoryChip('Tất cả', true),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip('Hành động', false),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip('Tình cảm', false),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip('Kinh dị', false),
-                  ],
-                ),
-              ),
+            // Category Filter Component
+            CategoryFilterList(
+              categories: _categories,
+              selectedCategory: _selectedCategory,
+              onCategorySelected: _onCategorySelected,
             ),
 
             const SizedBox(height: 16),
 
-            // Search Suggestions Section
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Gợi ý tìm kiếm',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Suggestion Chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildSuggestionChip('🔥 Top Gun: Maverick'),
-                  _buildSuggestionChip('Avatar 2'),
-                  _buildSuggestionChip('Spider-Man'),
-                  _buildSuggestionChip('Phim Hàn Quốc mới'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Search History Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Lịch sử',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Xoá tất cả',
-                      style: TextStyle(color: Color(0xFF5BA3F5), fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // History Items
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  _buildHistoryItem('Avengers: Endgame'),
-                  _buildHistoryItem('Phim hài tết 2024'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Results Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Kết quả hàng đầu',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Xem thêm',
-                      style: TextStyle(color: Color(0xFF5BA3F5), fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Search Results Grid
+            // Results
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.65,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: _searchResults.length,
-                itemBuilder: (context, index) {
-                  return MovieCard(
-                    title: _searchResults[index]['title']!,
-                    imageUrl: _searchResults[index]['image']!,
-                    year: _searchResults[index]['year'],
-                    genre: _searchResults[index]['genre'],
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MovieDetailScreen(),
-                        ),
-                      );
-                    },
+              child: SearchResultsGrid(
+                scrollController: _scrollController,
+                movies: _movies,
+                isLoading:
+                    _isLoading &&
+                    _movies.isEmpty, // Only show center loading if initial load
+                emptyMessage: _searchQuery.isEmpty
+                    ? 'Không có phim nào'
+                    : 'Không tìm thấy kết quả cho "$_searchQuery"',
+                isBookmarked: (movie) =>
+                    savedMovieNotifier.isMovieSaved(movie.slug),
+                onBookmark: _toggleSaveMovie,
+                onMovieTap: (movie) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          MovieDetailScreen(movieId: movie.slug, movie: movie),
+                    ),
                   );
                 },
               ),
             ),
+
+            // Bottom Loading Indicator for Infinite Scroll
+            if (_isLoadingMore)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
           ],
         ),
       ),
@@ -297,79 +347,5 @@ class _SearchScreenState extends State<SearchScreen> {
         onTap: _onNavBarTap,
       ),
     );
-  }
-
-  Widget _buildCategoryChip(String label, bool isSelected) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFF5BA3F5)
-            : (isDark ? const Color(0xFF1A2332) : const Color(0xFFE0E0E0)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected || isDark ? Colors.white : Colors.black,
-          fontSize: 14,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChip(String text) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A2332) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistoryItem(String text) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        Icons.history,
-        color: isDark ? Colors.grey : Colors.black45,
-        size: 20,
-      ),
-      title: Text(
-        text,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black,
-          fontSize: 14,
-        ),
-      ),
-      trailing: Icon(
-        Icons.close,
-        color: isDark ? Colors.grey : Colors.black45,
-        size: 20,
-      ),
-      onTap: () {},
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

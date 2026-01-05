@@ -31,11 +31,25 @@ class ApiConfig {
   static String get addCommentUrl => '$baseUrl$commentEndpoint/add';
 
   // Movie endpoints
-  static String getMoviesLimitUrl(int limit) => '$baseUrl$movieEndpoint/limit/$limit';
-  static String getMoviesByCategoryUrl(String slug) => '$baseUrl$movieEndpoint/category/$slug';
-  static String getMoviesByCountryUrl(String slug) => '$baseUrl$movieEndpoint/country/$slug';
-  static String getMoviesByYearUrl(int year) => '$baseUrl$movieEndpoint/year/$year';
-  static String getMovieDetailUrl(String slug) => '$baseUrl$movieEndpoint/$slug';
+  static String getMoviesLimitUrl(int limit) =>
+      '$baseUrl$movieEndpoint/limit/$limit';
+  static String getMoviesByCategoryUrl(String slug) =>
+      '$baseUrl$movieEndpoint/category/$slug';
+  static String getMoviesByCountryUrl(String slug) =>
+      '$baseUrl$movieEndpoint/country/$slug';
+  static String getMoviesByYearUrl(int year) =>
+      '$baseUrl$movieEndpoint/year/$year';
+  static String getMovieDetailUrl(String slug) =>
+      '$baseUrl$movieEndpoint/$slug';
+
+  // Bookmark endpoints
+  static const String bookmarkEndpoint = '/api/bookmarks';
+  static String get getBookmarksUrl => '$baseUrl$bookmarkEndpoint';
+  static String get addBookmarkUrl => '$baseUrl$bookmarkEndpoint';
+  static String removeBookmarkUrl(String movieId) =>
+      '$baseUrl$bookmarkEndpoint/$movieId';
+  static String checkBookmarkUrl(String movieId) =>
+      '$baseUrl$bookmarkEndpoint/check/$movieId';
 
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);

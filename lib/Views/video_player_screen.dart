@@ -5,16 +5,20 @@ import '../Components/video_player/custom_video_player.dart';
 import '../Components/episode_server_list.dart';
 import '../Components/comment_section.dart';
 
+import '../services/history_service.dart';
+
 class VideoPlayerScreen extends StatefulWidget {
   final MovieDetail movieDetail;
   final int initialServerIndex;
   final int initialEpisodeIndex;
+  final Duration? startAt;
 
   const VideoPlayerScreen({
     super.key,
     required this.movieDetail,
     this.initialServerIndex = 0,
     this.initialEpisodeIndex = 0,
+    this.startAt,
   });
 
   @override
@@ -25,6 +29,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late int _currentServerIndex;
   late int _currentEpisodeIndex;
   late List<ServerData> _servers;
+  final HistoryService _historyService = HistoryService();
+  int _lastSaveTime = 0;
 
   @override
   void initState() {
@@ -32,6 +38,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _currentServerIndex = widget.initialServerIndex;
     _currentEpisodeIndex = widget.initialEpisodeIndex;
     _convertEpisodes();
+  }
+
+  void _onProgress(Duration position) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // Save every 15 seconds (optimized for performance)
+    if (now - _lastSaveTime > 15000) {
+      _saveProgress(position);
+      _lastSaveTime = now;
+    }
+  }
+
+  void _saveProgress(Duration position) {
+    if (position.inSeconds < 5) return; // Don't save if just started
+
+    _historyService.saveProgress(
+      MovieProgress(
+        movieSlug: widget.movieDetail.slug,
+        serverIndex: _currentServerIndex,
+        episodeIndex: _currentEpisodeIndex,
+        positionSeconds: position.inSeconds,
+        lastUpdated: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
   }
 
   void _convertEpisodes() {
@@ -93,6 +122,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     ), // Reset player on change
                     videoUrl: videoUrl,
                     autoPlay: true,
+                    startAt:
+                        (_currentServerIndex == widget.initialServerIndex &&
+                            _currentEpisodeIndex == widget.initialEpisodeIndex)
+                        ? widget.startAt
+                        : null,
+                    onProgress: _onProgress,
                   ),
                   // Back button overlay
                   Positioned(

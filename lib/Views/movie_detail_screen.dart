@@ -17,6 +17,7 @@ import 'video_player_screen.dart';
 import '../Components/movie_detail/movie_info_header.dart';
 import '../Components/movie_detail/movie_action_buttons.dart';
 import '../Components/movie_detail/movie_synopsis.dart';
+import '../services/history_service.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final String movieId; // This should be slug
@@ -32,6 +33,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isSaved = false;
   bool _isSaveLoading = false;
   final SavedMovieService _savedMovieService = SavedMovieService();
+  final HistoryService _historyService = HistoryService();
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -42,6 +45,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   List<ServerData> _servers = [];
   int _currentServerIndex = 0;
   int _currentEpisodeIndex = 0;
+  MovieProgress? _savedProgress;
 
   @override
   void initState() {
@@ -66,11 +70,13 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     // Use slug from movieId or from movie object
     final slug = widget.movie?.slug ?? widget.movieId;
     final movieDetail = await _movieService.getMovieDetailFull(slug);
+    final savedProgress = await _historyService.getProgress(slug);
 
     if (mounted) {
       if (movieDetail != null) {
         setState(() {
           _movieDetail = movieDetail;
+          _savedProgress = savedProgress;
           _isLoading = false;
 
           // Convert actors to CastMember
@@ -140,6 +146,16 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       if (mounted) {
         setState(() => _isSaveLoading = false);
       }
+    }
+  }
+
+  Future<void> _refreshProgress() async {
+    final slug = widget.movie?.slug ?? widget.movieId;
+    final savedProgress = await _historyService.getProgress(slug);
+    if (mounted) {
+      setState(() {
+        _savedProgress = savedProgress;
+      });
     }
   }
 
@@ -358,19 +374,48 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   // Action Buttons
                   MovieActionButtons(
+                    watchText: _savedProgress != null
+                        ? 'Tiếp tục xem (Tập ${_savedProgress!.episodeIndex + 1})'
+                        : 'Xem ngay',
                     onWatchPressed: () {
                       if (_servers.isNotEmpty &&
                           _servers[0].episodes.isNotEmpty) {
+                        // Determine start parameters from history
+                        int startServerIdx = 0;
+                        int startEpisodeIdx = 0;
+                        Duration? startAt;
+
+                        if (_savedProgress != null) {
+                          // Validate indices exist
+                          if (_savedProgress!.serverIndex < _servers.length &&
+                              _savedProgress!.episodeIndex <
+                                  _servers[_savedProgress!.serverIndex]
+                                      .episodes
+                                      .length) {
+                            startServerIdx = _savedProgress!.serverIndex;
+                            startEpisodeIdx = _savedProgress!.episodeIndex;
+                            if (_savedProgress!.positionSeconds > 0) {
+                              startAt = Duration(
+                                seconds: _savedProgress!.positionSeconds,
+                              );
+                            }
+                          }
+                        }
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => VideoPlayerScreen(
                               movieDetail: _movieDetail!,
-                              initialServerIndex: 0,
-                              initialEpisodeIndex: 0,
+                              initialServerIndex: startServerIdx,
+                              initialEpisodeIndex: startEpisodeIdx,
+                              startAt: startAt,
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          // Refresh progress instantly without reloading everything
+                          _refreshProgress();
+                        });
                       } else {
                         AppSnackBar.showError(context, 'Chưa có tập phim nào');
                       }

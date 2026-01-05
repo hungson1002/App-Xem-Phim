@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../Components/bottom_navbar.dart';
 import '../models/user_model.dart';
-import '../models/watch_room_model.dart';
+// import '../models/watch_room_model.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/watch_room_service.dart';

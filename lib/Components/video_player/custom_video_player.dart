@@ -18,6 +18,10 @@ class CustomVideoPlayer extends StatefulWidget {
   // External control for syncing
   final Stream<VideoCommand>? commandStream;
 
+  // History / Progress
+  final Duration? startAt;
+  final void Function(Duration position)? onProgress;
+
   const CustomVideoPlayer({
     super.key,
     required this.videoUrl,
@@ -28,6 +32,8 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSeek,
     this.showControls = true,
     this.commandStream,
+    this.startAt,
+    this.onProgress,
   });
 
   @override
@@ -171,8 +177,19 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
       await _videoPlayerController.initialize();
 
-      // Add listener for sync callbacks
+      // Seek to initial position if provided
+      if (widget.startAt != null && widget.startAt! > Duration.zero) {
+        await _videoPlayerController.seekTo(widget.startAt!);
+      }
+
+      // Add listener for sync callbacks and progress
       _videoPlayerController.addListener(_onVideoStateChanged);
+
+      // Progress listener (VideoPlayerController notifies often)
+      _videoPlayerController.addListener(() {
+        if (!mounted || !_videoPlayerController.value.isInitialized) return;
+        widget.onProgress?.call(_videoPlayerController.value.position);
+      });
 
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,

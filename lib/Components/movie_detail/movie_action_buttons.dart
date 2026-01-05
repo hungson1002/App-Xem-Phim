@@ -7,6 +7,7 @@ class MovieActionButtons extends StatelessWidget {
   final bool isSaved;
   final bool isSaveLoading;
   final bool isDark;
+  final String watchText;
 
   const MovieActionButtons({
     super.key,
@@ -15,6 +16,7 @@ class MovieActionButtons extends StatelessWidget {
     required this.isSaved,
     required this.isSaveLoading,
     required this.isDark,
+    this.watchText = 'Xem ngay',
   });
 
   @override
@@ -23,7 +25,7 @@ class MovieActionButtons extends StatelessWidget {
       children: [
         Expanded(
           child: CustomButton(
-            text: 'Xem ngay',
+            text: watchText,
             onPressed: onWatchPressed,
             backgroundColor: const Color(0xFF5BA3F5),
           ),

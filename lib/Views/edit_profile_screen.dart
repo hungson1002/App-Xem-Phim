@@ -1,9 +1,8 @@
+// Màn hình chỉnh sửa thông tin cá nhân (Tên, Ảnh đại diện, Mật khẩu).
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../utils/app_snackbar.dart';
@@ -36,7 +35,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  // Image state
   File? _selectedImage;
   String? _base64Image;
 
@@ -184,7 +182,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Check password confirmation
     if (_passwordController.text.isNotEmpty &&
         _passwordController.text != _confirmPasswordController.text) {
       AppSnackBar.showError(context, 'Mật khẩu xác nhận không khớp');
@@ -252,12 +249,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Avatar Preview
               _buildAvatarSection(isDark),
-
               const SizedBox(height: 32),
-
-              // Name Field
               _buildTextField(
                 controller: _nameController,
                 label: 'Tên hiển thị',
@@ -270,10 +263,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 32),
-
-              // Password Section Divider
               Row(
                 children: [
                   Expanded(child: Divider(color: Colors.grey[600])),
@@ -287,10 +277,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Expanded(child: Divider(color: Colors.grey[600])),
                 ],
               ),
-
               const SizedBox(height: 20),
-
-              // New Password Field
               _buildPasswordField(
                 controller: _passwordController,
                 label: 'Mật khẩu mới',
@@ -299,10 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     setState(() => _obscurePassword = !_obscurePassword),
                 isDark: isDark,
               ),
-
               const SizedBox(height: 20),
-
-              // Confirm Password Field
               _buildPasswordField(
                 controller: _confirmPasswordController,
                 label: 'Xác nhận mật khẩu',
@@ -312,10 +296,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 isDark: isDark,
               ),
-
               const SizedBox(height: 40),
-
-              // Save Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -361,11 +342,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       imageProvider = FileImage(_selectedImage!);
     } else if (widget.user.avatar != null && widget.user.avatar!.isNotEmpty) {
       if (widget.user.avatar!.startsWith('data:image')) {
-        // Base64 image
         final base64Data = widget.user.avatar!.split(',').last;
         imageProvider = MemoryImage(base64Decode(base64Data));
       } else {
-        // URL image
         imageProvider = NetworkImage(widget.user.avatar!);
       }
     }

@@ -1,3 +1,4 @@
+// Màn hình tìm kiếm phim, hỗ trợ tìm theo tên hoặc lọc theo danh mục.
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -28,20 +29,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
   int _currentIndex = 1;
 
-  // Data State
   List<Movie> _movies = [];
   bool _isLoading = false;
   bool _isLoadingMore = false;
   String _searchQuery = '';
 
-  // Pagination State
   int _currentPage = 1;
   bool _hasMore = true;
   static const int _limit = 20;
 
   Timer? _debounce;
 
-  // Categories
   final Map<String, String> _categorySlugs = {
     'Tất cả': '',
     'Hành động': 'hanh-dong',
@@ -66,7 +64,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
     _scrollController.addListener(_onScroll);
 
-    // Load initial data (Browse Mode)
     _loadMovies();
   }
 
@@ -99,7 +96,6 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       List<Movie> newMovies;
 
-      // If searching
       if (_searchQuery.isNotEmpty) {
         newMovies = await _movieService.searchMovies(
           _searchQuery,
@@ -107,16 +103,13 @@ class _SearchScreenState extends State<SearchScreen> {
           limit: _limit,
         );
       } else {
-        // Browse Mode
         if (_selectedCategory == 'Tất cả') {
-          // Empty query returns all movies (Browse Mode)
           newMovies = await _movieService.searchMovies(
             '',
             page: 1,
             limit: _limit,
           );
         } else {
-          // Filter by category
           final slug = _categorySlugs[_selectedCategory]!;
           newMovies = await _movieService.getMoviesByCategory(
             slug,
@@ -135,7 +128,6 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } catch (e) {
-      print('Error loading movies: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -180,7 +172,6 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } catch (e) {
-      print('Error loading more movies: $e');
       if (mounted) setState(() => _isLoadingMore = false);
     }
   }
@@ -188,13 +179,11 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    // Update query instantly for UI input
     setState(() {
       _searchQuery = query;
     });
 
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      // Reset and reload
       _loadMovies();
     });
   }
@@ -205,7 +194,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _selectedCategory = category;
       _searchController.clear();
-      _searchQuery = ''; // Reset search when changing category
+      _searchQuery = '';
     });
 
     _loadMovies();
@@ -270,7 +259,6 @@ class _SearchScreenState extends State<SearchScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar Component
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -286,16 +274,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: SearchBarWidget(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
-                      onFilterTap: () {
-                        // Optional: Show filter dialog
-                      },
+                      onFilterTap: () {},
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Category Filter Component
             CategoryFilterList(
               categories: _categories,
               selectedCategory: _selectedCategory,
@@ -304,14 +289,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
             const SizedBox(height: 16),
 
-            // Results
             Expanded(
               child: SearchResultsGrid(
                 scrollController: _scrollController,
                 movies: _movies,
-                isLoading:
-                    _isLoading &&
-                    _movies.isEmpty, // Only show center loading if initial load
+                isLoading: _isLoading && _movies.isEmpty,
                 emptyMessage: _searchQuery.isEmpty
                     ? 'Không có phim nào'
                     : 'Không tìm thấy kết quả cho "$_searchQuery"',
@@ -330,7 +312,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
 
-            // Bottom Loading Indicator for Infinite Scroll
             if (_isLoadingMore)
               Padding(
                 padding: const EdgeInsets.all(8.0),

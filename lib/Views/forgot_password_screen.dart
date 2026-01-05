@@ -1,5 +1,5 @@
+// Màn hình quên mật khẩu: Gửi email để nhận OTP.
 import 'package:flutter/material.dart';
-
 import '../services/auth_service.dart';
 import 'reset_password_screen.dart';
 
@@ -67,8 +67,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // Back Button
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
@@ -81,10 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     padding: EdgeInsets.zero,
                   ),
                 ),
-
                 const SizedBox(height: 60),
-
-                // Lock Icon
                 Container(
                   width: 90,
                   height: 90,
@@ -98,10 +93,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     color: Color(0xFF5BA3F5),
                   ),
                 ),
-
                 const SizedBox(height: 35),
-
-                // Title
                 const Text(
                   'Quên mật khẩu?',
                   style: TextStyle(
@@ -110,10 +102,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // Subtitle
                 Text(
                   'Nhập email đã đăng ký để nhận\nmã xác nhận đặt lại mật khẩu',
                   textAlign: TextAlign.center,
@@ -123,10 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     height: 1.5,
                   ),
                 ),
-
                 const SizedBox(height: 45),
-
-                // Error Message
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(14),
@@ -156,8 +142,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ],
                     ),
                   ),
-
-                // Email Field
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -206,10 +190,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 35),
-
-                // Send OTP Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -241,10 +222,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Back to Login
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -265,7 +243,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 40),
               ],
             ),

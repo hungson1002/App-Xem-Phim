@@ -1,3 +1,4 @@
+// Component Video Player tùy chỉnh, hỗ trợ phát video từ URL, tự động phát lại và đồng bộ sự kiện.
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -7,18 +8,14 @@ class CustomVideoPlayer extends StatefulWidget {
   final bool autoPlay;
   final bool looping;
 
-  // Callbacks for sync (used in WatchRoom)
   final void Function(Duration position)? onPlay;
   final void Function(Duration position)? onPause;
   final void Function(Duration position)? onSeek;
 
-  // Control restrictions for WatchRoom guests
   final bool showControls;
 
-  // External control for syncing
   final Stream<VideoCommand>? commandStream;
 
-  // History / Progress
   final Duration? startAt;
   final void Function(Duration position)? onProgress;
 
@@ -40,7 +37,6 @@ class CustomVideoPlayer extends StatefulWidget {
   State<CustomVideoPlayer> createState() => CustomVideoPlayerState();
 }
 
-// Video command for external control
 enum VideoCommandType { play, pause, seek }
 
 class VideoCommand {
@@ -59,11 +55,9 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
   ChewieController? _chewieController;
   bool _isError = false;
 
-  // Track state for callbacks
   bool _wasPlaying = false;
   Duration _lastPosition = Duration.zero;
 
-  // Flag to ignore callbacks when receiving external commands
   bool _isExternalCommand = false;
 
   @override
@@ -71,7 +65,6 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
     super.initState();
     _initializePlayer();
 
-    // Listen to external commands
     widget.commandStream?.listen(_handleExternalCommand);
   }
 
@@ -96,7 +89,6 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
     _chewieController?.dispose();
   }
 
-  // Handle external commands (from socket sync)
   void _handleExternalCommand(VideoCommand command) {
     if (!mounted || _chewieController == null) return;
 
@@ -116,13 +108,11 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
         break;
     }
 
-    // Reset flag after short delay
     Future.delayed(const Duration(milliseconds: 500), () {
       _isExternalCommand = false;
     });
   }
 
-  // Public methods for external control
   void play() {
     _videoPlayerController.play();
   }
@@ -144,19 +134,14 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
     final isPlaying = _videoPlayerController.value.isPlaying;
     final position = _videoPlayerController.value.position;
 
-    // Detect play/pause changes
     if (isPlaying && !_wasPlaying) {
-      // Started playing
       widget.onPlay?.call(position);
     } else if (!isPlaying && _wasPlaying) {
-      // Paused
       widget.onPause?.call(position);
     }
 
-    // Detect seek (position changed significantly while paused or just after play)
     final positionDiff = (position - _lastPosition).abs();
     if (positionDiff > const Duration(seconds: 2) && _wasPlaying == isPlaying) {
-      // Likely a seek operation
       widget.onSeek?.call(position);
     }
 
@@ -177,15 +162,12 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
       await _videoPlayerController.initialize();
 
-      // Seek to initial position if provided
       if (widget.startAt != null && widget.startAt! > Duration.zero) {
         await _videoPlayerController.seekTo(widget.startAt!);
       }
 
-      // Add listener for sync callbacks and progress
       _videoPlayerController.addListener(_onVideoStateChanged);
 
-      // Progress listener (VideoPlayerController notifies often)
       _videoPlayerController.addListener(() {
         if (!mounted || !_videoPlayerController.value.isInitialized) return;
         widget.onProgress?.call(_videoPlayerController.value.position);
@@ -205,7 +187,6 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
             ),
           );
         },
-        // Customize the player UI if needed
         materialProgressColors: ChewieProgressColors(
           playedColor: const Color(0xFF5BA3F5),
           handleColor: const Color(0xFF5BA3F5),
@@ -227,6 +208,7 @@ class CustomVideoPlayerState extends State<CustomVideoPlayer> {
     }
   }
 
+  // Xây dựng giao diện trình phát video sử dụng Chewie.
   @override
   Widget build(BuildContext context) {
     if (_isError) {

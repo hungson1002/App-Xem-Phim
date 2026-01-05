@@ -1,3 +1,4 @@
+// Component danh sách ngang các bộ lọc danh mục.
 import 'package:flutter/material.dart';
 
 class CategoryFilterList extends StatelessWidget {
@@ -12,6 +13,7 @@ class CategoryFilterList extends StatelessWidget {
     required this.onCategorySelected,
   });
 
+  // Xây dựng danh sách cuộn ngang chứa các Chip danh mục.
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(

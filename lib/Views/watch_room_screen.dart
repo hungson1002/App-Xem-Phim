@@ -1,9 +1,6 @@
+// Màn hình phòng xem chung, hỗ trợ đồng bộ video và chat giữa các thành viên.
 import 'dart:async';
-
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/movie_detail_model.dart';
 import '../models/user_model.dart';
@@ -13,7 +10,11 @@ import '../services/movie_service.dart';
 import '../services/socket_service.dart';
 import '../services/watch_room_service.dart';
 import '../utils/app_snackbar.dart';
-import '../Components/video_player/synced_video_player.dart';
+
+import '../Components/watch_room/watch_room_player.dart';
+import '../Components/watch_room/watch_room_info.dart';
+import '../Components/watch_room/watch_room_participants.dart';
+import '../Components/watch_room/watch_room_episode_list.dart';
 
 class WatchRoomScreen extends StatefulWidget {
   final WatchRoom room;
@@ -36,21 +37,16 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
   MovieDetail? _movieDetail;
   bool _isLoading = true;
 
-  // Video sync state
   String? _currentVideoUrl;
   int _currentServerIndex = 0;
   int _currentEpisodeIndex = 0;
 
-  // Subscriptions
   final List<StreamSubscription> _subscriptions = [];
 
-  // Key to rebuild video player
   Key _playerKey = UniqueKey();
 
-  // Flag to prevent sync loop
   bool _isSyncing = false;
 
-  // Sync indicator
   bool _showSyncIndicator = false;
   IconData _syncIndicatorIcon = Icons.play_arrow;
 
@@ -101,7 +97,6 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
       }),
     );
 
-    // Show sync indicator for guests when host controls
     if (!widget.isHost) {
       _subscriptions.add(
         _socketService.onVideoPlay.listen((state) {
@@ -232,12 +227,7 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
     }
   }
 
-  void _copyRoomCode() {
-    Clipboard.setData(ClipboardData(text: _room.roomCode));
-    AppSnackBar.showSuccess(context, 'Đã sao chép mã phòng: ${_room.roomCode}');
-  }
-
-  void _onEpisodeTap(int serverIndex, int episodeIndex) {
+  void _onEpisodeTap(int index) {
     if (!widget.isHost) {
       AppSnackBar.showWarning(context, 'Chỉ host mới có thể đổi tập');
       return;
@@ -245,12 +235,11 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
 
     _isSyncing = true;
     setState(() {
-      _currentServerIndex = serverIndex;
-      _currentEpisodeIndex = episodeIndex;
+      _currentEpisodeIndex = index;
       _updateVideoUrl();
       _playerKey = UniqueKey();
     });
-    _socketService.emitEpisodeChange(serverIndex, episodeIndex);
+    _socketService.emitEpisodeChange(_currentServerIndex, index);
     Future.delayed(const Duration(milliseconds: 500), () => _isSyncing = false);
   }
 
@@ -272,402 +261,54 @@ class _WatchRoomScreenState extends State<WatchRoomScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  // Video player
-                  AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Stack(
-                      children: [
-                        if (_currentVideoUrl != null)
-                          SyncedVideoPlayer(
-                            key: _playerKey,
-                            videoUrl: _currentVideoUrl!,
-                            isHost: widget.isHost,
-                            roomCode: _room.roomCode,
-                            initialTime: _room.currentTime,
-                            socketService: _socketService,
-                          )
-                        else
-                          Container(
-                            color: Colors.black,
-                            child: const Center(
-                              child: Text(
-                                'Không thể tải video',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-
-                        // Sync indicator (only icon, appears briefly on guest)
-                        if (_showSyncIndicator && !widget.isHost)
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _syncIndicatorIcon,
-                                color: Colors.white,
-                                size: 50,
-                              ),
-                            ),
-                          ),
-
-                        // Back button
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: IconButton(
-                            onPressed: _leaveRoom,
-                            icon: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Room code badge
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: GestureDetector(
-                            onTap: _copyRoomCode,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF5BA3F5),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.copy,
-                                    color: Color(0xFF5BA3F5),
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _room.roomCode,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  WatchRoomPlayer(
+                    videoUrl: _currentVideoUrl,
+                    isHost: widget.isHost,
+                    roomCode: _room.roomCode,
+                    initialTime: _room.currentTime,
+                    socketService: _socketService,
+                    showSyncIndicator: _showSyncIndicator,
+                    syncIndicatorIcon: _syncIndicatorIcon,
+                    onLeave: _leaveRoom,
+                    playerKey: _playerKey,
                   ),
 
-                  // Room info
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Movie info
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _room.movieName,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                if (_movieDetail != null &&
-                                    _movieDetail!.episodes.isNotEmpty)
-                                  Text(
-                                    '${_movieDetail!.episodes[_currentServerIndex].serverName} - ${_movieDetail!.episodes[_currentServerIndex].episodes[_currentEpisodeIndex].name}',
-                                    style: const TextStyle(
-                                      color: Color(0xFF5BA3F5),
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-
-                          const Divider(color: Colors.grey, height: 1),
-
-                          // Participants
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.groups,
-                                      color: Colors.white70,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Đang xem (${_room.participantCount})',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  height: 60,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: _room.participants.length,
-                                    itemBuilder: (context, index) {
-                                      final participant =
-                                          _room.participants[index];
-                                      final isHostUser =
-                                          participant.id == _room.hostId;
-                                      return Container(
-                                        margin: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Stack(
-                                              children: [
-                                                CircleAvatar(
-                                                  radius: 20,
-                                                  backgroundColor: const Color(
-                                                    0xFF5BA3F5,
-                                                  ),
-                                                  child:
-                                                      (participant.avatar !=
-                                                              null &&
-                                                          participant
-                                                              .avatar!
-                                                              .isNotEmpty)
-                                                      ? ClipOval(
-                                                          child: CachedNetworkImage(
-                                                            imageUrl:
-                                                                participant
-                                                                    .avatar!,
-                                                            width: 40,
-                                                            height: 40,
-                                                            fit: BoxFit.cover,
-                                                            errorWidget:
-                                                                (
-                                                                  context,
-                                                                  url,
-                                                                  error,
-                                                                ) => Text(
-                                                                  participant
-                                                                      .name
-                                                                      .substring(
-                                                                        0,
-                                                                        1,
-                                                                      )
-                                                                      .toUpperCase(),
-                                                                  style: const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                  ),
-                                                                ),
-                                                          ),
-                                                        )
-                                                      : Text(
-                                                          participant.name
-                                                              .substring(0, 1)
-                                                              .toUpperCase(),
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                        ),
-                                                ),
-                                                if (isHostUser)
-                                                  Positioned(
-                                                    right: 0,
-                                                    bottom: 0,
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            2,
-                                                          ),
-                                                      decoration:
-                                                          const BoxDecoration(
-                                                            color: Colors.amber,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                      child: const Icon(
-                                                        Icons.star,
-                                                        size: 10,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            SizedBox(
-                                              width: 60,
-                                              child: Text(
-                                                participant.name,
-                                                style: const TextStyle(
-                                                  color: Colors.white70,
-                                                  fontSize: 11,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const Divider(color: Colors.grey, height: 1),
-
-                          // Episode list
                           if (_movieDetail != null &&
                               _movieDetail!.episodes.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.list,
-                                        color: Colors.white70,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        'Danh sách tập',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      if (!widget.isHost) ...[
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orange.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'Chỉ host',
-                                            style: TextStyle(
-                                              color: Colors.orange,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: List.generate(
-                                      _movieDetail!
-                                          .episodes[_currentServerIndex]
-                                          .episodes
-                                          .length,
-                                      (index) {
-                                        final episode = _movieDetail!
-                                            .episodes[_currentServerIndex]
-                                            .episodes[index];
-                                        final isSelected =
-                                            index == _currentEpisodeIndex;
-                                        return GestureDetector(
-                                          onTap: () => _onEpisodeTap(
-                                            _currentServerIndex,
-                                            index,
-                                          ),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 10,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: isSelected
-                                                  ? const Color(0xFF5BA3F5)
-                                                  : Colors.white.withOpacity(
-                                                      0.1,
-                                                    ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: isSelected
-                                                  ? null
-                                                  : Border.all(
-                                                      color: Colors.white24,
-                                                    ),
-                                            ),
-                                            child: Text(
-                                              episode.name,
-                                              style: TextStyle(
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : Colors.white70,
-                                                fontWeight: isSelected
-                                                    ? FontWeight.bold
-                                                    : FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            WatchRoomInfo(
+                              movieName: _room.movieName,
+                              serverName: _movieDetail!
+                                  .episodes[_currentServerIndex]
+                                  .serverName,
+                              episodeName: _movieDetail!
+                                  .episodes[_currentServerIndex]
+                                  .episodes[_currentEpisodeIndex]
+                                  .name,
+                            ),
+
+                          const Divider(color: Colors.grey, height: 1),
+
+                          WatchRoomParticipants(
+                            participants: _room.participants,
+                            hostId: _room.hostId,
+                          ),
+
+                          const Divider(color: Colors.grey, height: 1),
+
+                          if (_movieDetail != null &&
+                              _movieDetail!.episodes.isNotEmpty)
+                            WatchRoomEpisodeList(
+                              episodes: _movieDetail!
+                                  .episodes[_currentServerIndex]
+                                  .episodes,
+                              currentEpisodeIndex: _currentEpisodeIndex,
+                              isHost: widget.isHost,
+                              onEpisodeTap: _onEpisodeTap,
                             ),
 
                           const SizedBox(height: 40),

@@ -1,3 +1,4 @@
+// Component thanh tiêu đề màn hình chính (Home App Bar), chứa logo và nút tìm kiếm/profile.
 import 'package:flutter/material.dart';
 
 import '../Views/profile_screen.dart';
@@ -10,6 +11,7 @@ class HomeAppBar extends StatelessWidget {
 
   const HomeAppBar({super.key, required this.user});
 
+  // Xây dựng SliverAppBar với hiệu ứng cuộn, logo gradient và các action.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -26,7 +28,6 @@ class HomeAppBar extends StatelessWidget {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Gradient play icon like login screen
           Container(
             width: 36,
             height: 36,
@@ -55,7 +56,6 @@ class HomeAppBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // CHILL PHIM text
           Text(
             'CHILL PHIM',
             style: TextStyle(

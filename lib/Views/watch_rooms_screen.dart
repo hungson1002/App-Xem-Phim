@@ -1,8 +1,8 @@
+// Màn hình danh sách các phòng xem chung, cho phép tạo mới hoặc tham gia.
 import 'package:flutter/material.dart';
 
 import '../Components/bottom_navbar.dart';
 import '../models/user_model.dart';
-// import '../models/watch_room_model.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/watch_room_service.dart';
@@ -13,7 +13,6 @@ import 'profile_screen.dart';
 import 'search_screen.dart';
 import 'watch_room_screen.dart';
 
-// New Components
 import '../Components/watch_room/join_room_section.dart';
 import '../Components/watch_room/create_room_modal.dart';
 
@@ -97,7 +96,7 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
     CreateRoomModal.show(
       context,
       onCreate: (slug, name, poster) async {
-        Navigator.pop(context); // Close modal
+        Navigator.pop(context);
         await _createRoom(slug, name, poster);
       },
     );
@@ -190,7 +189,6 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon
               Container(
                 width: 120,
                 height: 120,
@@ -206,7 +204,6 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Title & Subtitle
               Text(
                 'Xem phim cùng bạn bè',
                 style: TextStyle(
@@ -225,12 +222,10 @@ class _WatchRoomsScreenState extends State<WatchRoomsScreen> {
 
               const SizedBox(height: 48),
 
-              // Join Room Section
               JoinRoomSection(onJoin: _onJoinRoom, isLoading: _isLoading),
 
               const SizedBox(height: 32),
 
-              // Create Room Button
               TextButton.icon(
                 onPressed: _showCreateRoomDialog,
                 icon: const Icon(Icons.add_circle_outline),

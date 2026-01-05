@@ -1,3 +1,4 @@
+// Model bình luận.
 import 'user_model.dart';
 
 class Comment {
@@ -27,7 +28,7 @@ class Comment {
     );
   }
 
-  // Helper method to get display time
+  // Phương thức lấy thời gian hiển thị.
   String get displayTime {
     final now = DateTime.now();
     final difference = now.difference(createdAt);

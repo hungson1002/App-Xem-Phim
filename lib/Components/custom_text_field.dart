@@ -1,3 +1,4 @@
+// Component ô nhập liệu tùy chỉnh (Custom TextField) với label và icon.
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -20,18 +21,13 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType,
   });
 
+  // Xây dựng giao diện ô nhập liệu với label phía trên.
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 14,
-          ),
-        ),
+        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 14)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,

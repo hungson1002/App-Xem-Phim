@@ -1,8 +1,7 @@
+// Helper hiển thị SnackBar tùy chỉnh (Success, Error, Info, Warning).
 import 'package:flutter/material.dart';
 
-/// Helper class for showing styled snackbars throughout the app
 class AppSnackBar {
-  /// Show a success snackbar with green background and check icon
   static void showSuccess(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -37,7 +36,6 @@ class AppSnackBar {
     );
   }
 
-  /// Show an error snackbar with red background and error icon
   static void showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -72,7 +70,6 @@ class AppSnackBar {
     );
   }
 
-  /// Show an info snackbar with blue background and info icon
   static void showInfo(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -111,7 +108,6 @@ class AppSnackBar {
     );
   }
 
-  /// Show a warning snackbar with orange background and warning icon
   static void showWarning(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

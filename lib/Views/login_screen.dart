@@ -1,6 +1,6 @@
+// Màn hình đăng nhập (Email/Password & Google Login).
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import '../services/auth_service.dart';
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
@@ -178,8 +178,6 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 60),
-
-                // Logo and App Name
                 Center(
                   child: Column(
                     children: [
@@ -216,10 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 50),
-
-                // Welcome Text
                 const Text(
                   'Chào mừng trở lại!',
                   style: TextStyle(
@@ -233,10 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Đăng nhập để tiếp tục xem phim',
                   style: TextStyle(color: Colors.grey[400], fontSize: 15),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Error Message
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(14),
@@ -266,8 +258,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-
-                // Email Field
                 _buildTextField(
                   controller: _emailController,
                   label: 'Email',
@@ -275,10 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
-
                 const SizedBox(height: 20),
-
-                // Password Field
                 _buildTextField(
                   controller: _passwordController,
                   label: 'Mật khẩu',
@@ -290,10 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     setState(() => _obscurePassword = !_obscurePassword);
                   },
                 ),
-
                 const SizedBox(height: 12),
-
-                // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -319,10 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -354,10 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Divider
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.grey[700])),
@@ -371,10 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(child: Divider(color: Colors.grey[700])),
                   ],
                 ),
-
                 const SizedBox(height: 30),
-
-                // Google Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -408,10 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -439,7 +411,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 30),
               ],
             ),

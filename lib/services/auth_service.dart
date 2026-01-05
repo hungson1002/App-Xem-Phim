@@ -1,8 +1,7 @@
+// Service xử lý xác thực người dùng (Đăng ký, Đăng nhập, OTP).
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/auth_response.dart';
 import '../models/user_model.dart';
 import 'api_config.dart';
@@ -53,7 +52,6 @@ class AuthService {
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
 
-      // Save token and user data if login successful
       if (authResponse.success && authResponse.token != null) {
         await _saveAuthData(authResponse.token!, authResponse.user);
       }
@@ -87,8 +85,6 @@ class AuthService {
   Future<AuthResponse> googleLogin({required String googleToken}) async {
     try {
       final url = ApiConfig.googleLoginUrl;
-      print('=== Google Login API Debug ===');
-      print('URL: $url');
 
       final response = await http
           .post(
@@ -97,11 +93,6 @@ class AuthService {
             body: jsonEncode({'googleToken': googleToken}),
           )
           .timeout(ApiConfig.timeout);
-
-      print('Status Code: ${response.statusCode}');
-      print(
-        'Response Body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}',
-      );
 
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
@@ -112,7 +103,6 @@ class AuthService {
 
       return authResponse;
     } catch (e) {
-      print('Google Login Error: $e');
       return AuthResponse.error('Lỗi kết nối: ${e.toString()}');
     }
   }

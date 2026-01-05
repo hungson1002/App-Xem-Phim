@@ -1,3 +1,4 @@
+// Component nút bấm tùy chỉnh (Custom Button) với trạng thái loading.
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
@@ -16,6 +17,7 @@ class CustomButton extends StatelessWidget {
     this.textColor,
   });
 
+  // Xây dựng giao diện nút bấm, hiển thị loading indicator khi đang xử lý.
   @override
   Widget build(BuildContext context) {
     return SizedBox(

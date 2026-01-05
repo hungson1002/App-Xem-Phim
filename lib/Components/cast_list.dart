@@ -1,7 +1,7 @@
+// Component hiển thị danh sách diễn viên với avatar ngẫu nhiên hoặc tên viết tắt.
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-/// Model cho thông tin diễn viên
 class CastMember {
   final String name;
   final String? role;
@@ -10,13 +10,11 @@ class CastMember {
   const CastMember({required this.name, this.role, this.imageUrl});
 }
 
-/// Widget hiển thị danh sách diễn viên với ảnh từ assets
 class CastList extends StatelessWidget {
   final List<CastMember> cast;
   final VoidCallback? onSeeAllTap;
   final Color primaryColor;
 
-  // Danh sách ảnh local trong assets
   static const List<String> _localAvatars = [
     'assets/img/avt1.png',
     'assets/img/avt2.png',
@@ -31,11 +29,8 @@ class CastList extends StatelessWidget {
     this.primaryColor = const Color(0xFF5BA3F5),
   });
 
-  /// Lấy ảnh ngẫu nhiên từ thư mục assets dựa theo tên
   String _getRandomAvatar(String name) {
-    final random = Random(
-      name.hashCode,
-    ); // Seed theo tên để cố định ảnh cho mỗi người
+    final random = Random(name.hashCode);
     return _localAvatars[random.nextInt(_localAvatars.length)];
   }
 
@@ -64,6 +59,7 @@ class CastList extends StatelessWidget {
     return colors[hash % colors.length];
   }
 
+  // Xây dựng danh sách diễn viên (ngang) với header "Diễn viên".
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -75,7 +71,6 @@ class CastList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -104,7 +99,6 @@ class CastList extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // Cast horizontal list
         SizedBox(
           height: 160,
           child: ListView.builder(
@@ -129,15 +123,10 @@ class CastList extends StatelessWidget {
     int index,
     bool isDark,
   ) {
-    // Logic: Chỉ dùng Asset.
-    // Nếu Asset lỗi: Fallback về Initials.
-
-    // Lấy ảnh asset random theo tên để nhất quán
     final String assetPath = _getRandomAvatar(member.name);
 
     return Column(
       children: [
-        // Avatar image
         Container(
           width: 80,
           height: 100,
@@ -158,7 +147,6 @@ class CastList extends StatelessWidget {
               assetPath,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                // Nếu asset lỗi thì fallback về Initials
                 debugPrint('Error loading asset $assetPath: $error');
                 return Container(
                   color: _getAvatarColor(member.name),
@@ -180,7 +168,6 @@ class CastList extends StatelessWidget {
 
         const SizedBox(height: 10),
 
-        // Name and role
         SizedBox(
           width: 90,
           child: Column(
@@ -212,6 +199,4 @@ class CastList extends StatelessWidget {
       ],
     );
   }
-
-  // _buildPlaceholder removed as it is replaced by logic in _buildCastCard
 }

@@ -1,6 +1,6 @@
+// Model phản hồi xác thực từ API.
 import 'user_model.dart';
 
-/// Response model for authentication API calls
 class AuthResponse {
   final bool success;
   final String? message;

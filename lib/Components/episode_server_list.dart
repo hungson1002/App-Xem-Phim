@@ -1,6 +1,6 @@
+// Component hiển thị danh sách tập phim và server phim.
 import 'package:flutter/material.dart';
 
-/// Model cho một server với danh sách tập
 class ServerData {
   final String name;
   final List<EpisodeData> episodes;
@@ -8,7 +8,6 @@ class ServerData {
   const ServerData({required this.name, required this.episodes});
 }
 
-/// Model cho một tập phim
 class EpisodeData {
   final String name;
   final String? slug;
@@ -25,7 +24,6 @@ class EpisodeData {
   });
 }
 
-/// Widget hiển thị danh sách server và tập phim
 class EpisodeServerList extends StatefulWidget {
   final List<ServerData> servers;
   final int? currentEpisodeIndex;
@@ -55,6 +53,7 @@ class _EpisodeServerListState extends State<EpisodeServerList> {
     _selectedServerIndex = widget.currentServerIndex ?? 0;
   }
 
+  // Hiển thị danh sách tabs Server (nếu có > 1) và lưới danh sách tập phim.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -104,7 +103,6 @@ class _EpisodeServerListState extends State<EpisodeServerList> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Text(
           'Danh sách tập',
           style: TextStyle(
@@ -116,7 +114,6 @@ class _EpisodeServerListState extends State<EpisodeServerList> {
 
         const SizedBox(height: 16),
 
-        // Server Tabs
         if (widget.servers.length > 1) ...[
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -171,7 +168,6 @@ class _EpisodeServerListState extends State<EpisodeServerList> {
           const SizedBox(height: 16),
         ],
 
-        // Episode Grid
         _buildEpisodeGrid(isDark),
       ],
     );

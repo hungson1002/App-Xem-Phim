@@ -1,3 +1,4 @@
+// Component hiển thị nội dung tóm tắt của phim.
 import 'package:flutter/material.dart';
 
 class MovieSynopsis extends StatelessWidget {
@@ -6,6 +7,7 @@ class MovieSynopsis extends StatelessWidget {
 
   const MovieSynopsis({super.key, required this.content, required this.isDark});
 
+  // Hiển thị tiêu đề Nội dung và đoạn văn bản tóm tắt phim.
   @override
   Widget build(BuildContext context) {
     return Column(

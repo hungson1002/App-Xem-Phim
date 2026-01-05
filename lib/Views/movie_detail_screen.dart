@@ -1,3 +1,4 @@
+// Màn hình chi tiết phim, hiển thị thông tin, danh sách diễn viên, tập phim và bình luận.
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -20,7 +21,7 @@ import '../Components/movie_detail/movie_synopsis.dart';
 import '../services/history_service.dart';
 
 class MovieDetailScreen extends StatefulWidget {
-  final String movieId; // This should be slug
+  final String movieId;
   final Movie? movie;
 
   const MovieDetailScreen({super.key, required this.movieId, this.movie});
@@ -67,7 +68,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       _errorMessage = null;
     });
 
-    // Use slug from movieId or from movie object
     final slug = widget.movie?.slug ?? widget.movieId;
     final movieDetail = await _movieService.getMovieDetailFull(slug);
     final savedProgress = await _historyService.getProgress(slug);
@@ -79,12 +79,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           _savedProgress = savedProgress;
           _isLoading = false;
 
-          // Convert actors to CastMember
           _cast = movieDetail.actors
               .map((name) => CastMember(name: name))
               .toList();
 
-          // Convert episodes to ServerData
           _servers = movieDetail.episodes
               .map(
                 (server) => ServerData(
@@ -112,7 +110,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
     try {
       if (_isSaved) {
-        // Remove from saved list
         final response = await _savedMovieService.removeSavedMovie(
           widget.movieId,
         );
@@ -126,7 +123,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           );
         }
       } else {
-        // Save movie using movieId (slug)
         final response = await _savedMovieService.saveMovie(widget.movieId);
         if (response.success && mounted) {
           setState(() => _isSaved = true);
@@ -163,7 +159,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Show loading indicator
     if (_isLoading) {
       return Scaffold(
         backgroundColor: isDark
@@ -184,7 +179,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       );
     }
 
-    // Show error state
     if (_errorMessage != null) {
       return Scaffold(
         backgroundColor: isDark
@@ -219,7 +213,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       );
     }
 
-    // Use _movieDetail data or fallback to widget.movie
     final posterUrl = _movieDetail?.posterUrl ?? widget.movie?.posterUrl ?? '';
     final movieName = _movieDetail?.name ?? widget.movie?.name ?? 'Tên phim';
     final originName =
@@ -228,13 +221,11 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     final time = _movieDetail?.time ?? widget.movie?.time ?? '';
     final quality = _movieDetail?.quality ?? widget.movie?.quality ?? 'HD';
 
-    // Extract category names for display
     final categoryNames =
         _movieDetail?.category.map((c) => c.name).toList() ??
         widget.movie?.category ??
         [];
 
-    // Extract first category slug for related movies
     final firstCategorySlug = _movieDetail?.category.isNotEmpty == true
         ? _movieDetail!.category.first.slug
         : '';
@@ -248,7 +239,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           : const Color(0xFFF5F5F5),
       body: CustomScrollView(
         slivers: [
-          // Movie Poster with Play Button
           SliverAppBar(
             expandedHeight: 500,
             pinned: true,
@@ -306,7 +296,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   icon: const Icon(Icons.share, color: Colors.white),
                   onPressed: () {
                     final slug = widget.movie?.slug ?? widget.movieId;
-                    // Web Link: https://watchalong428.vercel.app/movie/<slug>
                     final String deepLink =
                         'https://watchalong428.vercel.app/movie/$slug';
                     Share.share('Xem phim $movieName tại: $deepLink');
@@ -318,15 +307,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background Image
                   CachedImageWidget(
                     imageUrl: posterUrl.isNotEmpty
                         ? posterUrl
                         : 'https://via.placeholder.com/400x600',
                     fit: BoxFit.cover,
                   ),
-
-                  // Gradient Overlay
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -345,14 +331,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             ),
           ),
 
-          // Movie Details
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Genre Tags and Rating
                   MovieGenreTags(
                     genres: categoryNames.isNotEmpty ? categoryNames : ['Phim'],
                     rating: 8.5,
@@ -360,7 +344,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Movie Info Header
                   MovieInfoHeader(
                     movieName: movieName,
                     originName: originName,
@@ -372,7 +355,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Action Buttons
                   MovieActionButtons(
                     watchText: _savedProgress != null
                         ? 'Tiếp tục xem (Tập ${_savedProgress!.episodeIndex + 1})'
@@ -380,13 +362,11 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     onWatchPressed: () {
                       if (_servers.isNotEmpty &&
                           _servers[0].episodes.isNotEmpty) {
-                        // Determine start parameters from history
                         int startServerIdx = 0;
                         int startEpisodeIdx = 0;
                         Duration? startAt;
 
                         if (_savedProgress != null) {
-                          // Validate indices exist
                           if (_savedProgress!.serverIndex < _servers.length &&
                               _savedProgress!.episodeIndex <
                                   _servers[_savedProgress!.serverIndex]
@@ -413,7 +393,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                             ),
                           ),
                         ).then((_) {
-                          // Refresh progress instantly without reloading everything
                           _refreshProgress();
                         });
                       } else {
@@ -428,12 +407,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Synopsis
                   MovieSynopsis(content: content, isDark: isDark),
 
                   const SizedBox(height: 24),
 
-                  // Episode/Server List
                   EpisodeServerList(
                     servers: _servers,
                     currentServerIndex: _currentServerIndex,
@@ -454,22 +431,14 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Cast List
-                  CastList(
-                    cast: _cast,
-                    onSeeAllTap: () {
-                      // TODO: Navigate to full cast list
-                    },
-                  ),
+                  CastList(cast: _cast, onSeeAllTap: () {}),
 
                   const SizedBox(height: 24),
 
-                  // Comments Section
                   CommentSection(movieId: widget.movieId),
 
                   const SizedBox(height: 24),
 
-                  // Related Movies (Replaced with new component)
                   RelatedMoviesList(
                     categorySlug: firstCategorySlug,
                     currentMovieId: widget.movieId,

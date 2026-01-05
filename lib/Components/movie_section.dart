@@ -1,3 +1,4 @@
+// Component hiển thị danh sách phim theo chiều ngang, có tiêu đề và nút xem tất cả.
 import 'package:flutter/material.dart';
 
 import '../Views/movie_detail_screen.dart';
@@ -33,9 +34,7 @@ class _MovieSectionState extends State<MovieSection> with RouteAware {
   @override
   void initState() {
     super.initState();
-    // Listen to saved movie changes
     savedMovieNotifier.addListener(_onSavedMoviesChanged);
-    // Load saved movies if not loaded yet
     if (!savedMovieNotifier.isLoaded) {
       savedMovieNotifier.loadSavedMovies();
     }
@@ -44,7 +43,6 @@ class _MovieSectionState extends State<MovieSection> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Subscribe to global route observer
     final route = ModalRoute.of(context);
     if (route is PageRoute) {
       routeObserver.subscribe(this, route);
@@ -64,17 +62,14 @@ class _MovieSectionState extends State<MovieSection> with RouteAware {
     }
   }
 
-  // Called when the top route has been popped off, and this route shows up
   @override
   void didPopNext() {
-    // Refresh saved movies from server when returning to this screen
     savedMovieNotifier.refresh();
   }
 
   Future<void> _toggleSaveMovie(Movie movie) async {
     final slug = movie.slug;
 
-    // Set loading state
     setState(() {
       _loadingStates[slug] = true;
     });
@@ -106,6 +101,7 @@ class _MovieSectionState extends State<MovieSection> with RouteAware {
     }
   }
 
+  // Xây dựng Header tiêu đề và danh sách cuộn ngang các thẻ phim (MovieCard).
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -195,7 +191,6 @@ class _MovieSectionState extends State<MovieSection> with RouteAware {
                                 );
                               },
                             ),
-                            // Loading overlay for bookmark button
                             if (isLoading)
                               Positioned(
                                 top: 8,

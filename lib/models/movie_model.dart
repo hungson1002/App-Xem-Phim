@@ -1,3 +1,4 @@
+// Model phim rút gọn (hiển thị danh sách).
 class Movie {
   final String id;
   final String name;
@@ -40,16 +41,13 @@ class Movie {
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
-    // Helper to safely parse lists of objects or strings to just a list of names/slugs if needed.
-    // Based on server model, category is object list {id, name, slug}.
-    // For simple UI display we might just want the names.
-    
+    // Hàm hỗ trợ parse danh sách tên từ object hoặc string.
     List<String> parseListNames(dynamic listData) {
       if (listData == null) return [];
       if (listData is List) {
         return listData.map((item) {
           if (item is Map) {
-             return item['name']?.toString() ?? ''; 
+            return item['name']?.toString() ?? '';
           }
           return item.toString();
         }).toList();
@@ -65,7 +63,9 @@ class Movie {
       content: json['content'] ?? '',
       type: json['type'] ?? '',
       status: json['status'] ?? '',
-      year: json['year'] is int ? json['year'] : int.tryParse(json['year'].toString()) ?? 0,
+      year: json['year'] is int
+          ? json['year']
+          : int.tryParse(json['year'].toString()) ?? 0,
       posterUrl: json['poster_url'] ?? '',
       thumbUrl: json['thumb_url'] ?? '',
       webpPoster: json['webp_poster'] ?? '',

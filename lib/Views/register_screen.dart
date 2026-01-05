@@ -1,3 +1,4 @@
+// Màn hình đăng ký tài khoản mới (Email, Tên, Mật khẩu).
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -146,8 +147,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-
-                // Back Button
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(
@@ -158,10 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: EdgeInsets.zero,
                   alignment: Alignment.centerLeft,
                 ),
-
                 const SizedBox(height: 20),
-
-                // Title
                 const Text(
                   'Tạo tài khoản',
                   style: TextStyle(
@@ -175,10 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   'Đăng ký để bắt đầu xem phim',
                   style: TextStyle(color: Colors.grey[400], fontSize: 15),
                 ),
-
                 const SizedBox(height: 35),
-
-                // Error Message
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(14),
@@ -208,18 +201,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-
-                // Name Field
                 _buildTextField(
                   controller: _nameController,
                   label: 'Họ và tên',
                   hint: 'Nhập họ và tên',
                   icon: Icons.person_outline,
                 ),
-
                 const SizedBox(height: 18),
-
-                // Email Field
                 _buildTextField(
                   controller: _emailController,
                   label: 'Email',
@@ -227,10 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
-
                 const SizedBox(height: 18),
-
-                // Password Field
                 _buildTextField(
                   controller: _passwordController,
                   label: 'Mật khẩu',
@@ -242,10 +227,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     setState(() => _obscurePassword = !_obscurePassword);
                   },
                 ),
-
                 const SizedBox(height: 18),
-
-                // Confirm Password Field
                 _buildTextField(
                   controller: _confirmPasswordController,
                   label: 'Xác nhận mật khẩu',
@@ -259,10 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                 ),
-
                 const SizedBox(height: 22),
-
-                // Terms and Conditions
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -318,10 +297,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 28),
-
-                // Register Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -353,10 +329,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 25),
-
-                // Divider
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.grey[700])),
@@ -370,10 +343,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(child: Divider(color: Colors.grey[700])),
                   ],
                 ),
-
                 const SizedBox(height: 25),
-
-                // Google Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -407,10 +377,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -431,7 +398,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 30),
               ],
             ),

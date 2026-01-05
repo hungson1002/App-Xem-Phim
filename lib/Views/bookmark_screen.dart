@@ -1,5 +1,5 @@
+// Màn hình hiển thị danh sách phim đã lưu (Yêu thích).
 import 'package:flutter/material.dart';
-
 import '../Components/bookmark_card.dart';
 import '../Components/bottom_navbar.dart';
 import '../services/saved_movie_service.dart';
@@ -21,7 +21,6 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
   bool _isGridView = true;
   bool _isLoading = true;
   String? _errorMessage;
-
   final SavedMovieService _savedMovieService = SavedMovieService();
   List<SavedMovieItem> _savedMovies = [];
 
@@ -195,7 +194,6 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
 
     return Column(
       children: [
-        // Movie Count and View Toggle
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -233,8 +231,6 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
             ],
           ),
         ),
-
-        // Saved Movies Grid/List
         Expanded(child: _isGridView ? _buildGridView() : _buildListView()),
       ],
     );
@@ -268,7 +264,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                 builder: (context) =>
                     MovieDetailScreen(movieId: savedMovie.movieSlug),
               ),
-            ).then((_) => _loadSavedMovies()); // Refresh after returning
+            ).then((_) => _loadSavedMovies());
           },
         );
       },
@@ -301,7 +297,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                     builder: (context) =>
                         MovieDetailScreen(movieId: savedMovie.movieSlug),
                   ),
-                ).then((_) => _loadSavedMovies()); // Refresh after returning
+                ).then((_) => _loadSavedMovies());
               },
             ),
           ),

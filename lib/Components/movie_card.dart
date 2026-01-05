@@ -1,3 +1,4 @@
+// Component thẻ phim đứng (Vertical), hiển thị trong các danh sách lưới.
 import 'package:flutter/material.dart';
 import 'cached_image_widget.dart';
 
@@ -21,6 +22,7 @@ class MovieCard extends StatelessWidget {
     this.onBookmark,
   });
 
+  // Xây dựng thẻ phim với ảnh nền, gradient text và nút bookmark.
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

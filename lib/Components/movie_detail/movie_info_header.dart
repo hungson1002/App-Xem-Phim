@@ -1,3 +1,4 @@
+// Component hiển thị thông tin tiêu đề, năm sản xuất, thời lượng và chất lượng phim.
 import 'package:flutter/material.dart';
 
 class MovieInfoHeader extends StatelessWidget {
@@ -18,12 +19,12 @@ class MovieInfoHeader extends StatelessWidget {
     required this.isDark,
   });
 
+  // Hiển thị tên phim, tên gốc và các thông tin metadata.
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
         Text(
           movieName,
           style: TextStyle(
@@ -45,7 +46,6 @@ class MovieInfoHeader extends StatelessWidget {
 
         const SizedBox(height: 12),
 
-        // Year, Duration, Quality
         Row(
           children: [
             Text(

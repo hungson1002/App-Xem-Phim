@@ -1,3 +1,4 @@
+// Component thanh tìm kiếm với nút filter tùy chọn.
 import 'package:flutter/material.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -14,6 +15,7 @@ class SearchBarWidget extends StatelessWidget {
     this.hintText = 'Tìm phim, diễn viên, đạo diễn...',
   });
 
+  // Xây dựng thanh tìm kiếm với icon search, input và nút xóa text.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

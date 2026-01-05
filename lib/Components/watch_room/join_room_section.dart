@@ -1,3 +1,4 @@
+// Component nhập mã phòng (6 ký tự) để tham gia phòng xem.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,6 +25,7 @@ class _JoinRoomSectionState extends State<JoinRoomSection> {
     super.dispose();
   }
 
+  // Xây dựng giao diện nhập mã phòng và nút tham gia.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

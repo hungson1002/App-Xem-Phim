@@ -1,20 +1,16 @@
+// Service xử lý API cho WatchRoom (Tạo, Lấy danh sách, Tham gia phòng).
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/watch_room_model.dart';
 import 'api_config.dart';
 
-/// Service for WatchRoom HTTP API calls
 class WatchRoomService {
-  /// Get auth token from storage
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(ApiConfig.tokenKey);
   }
 
-  /// Get auth headers
   Future<Map<String, String>> _getHeaders() async {
     final token = await _getToken();
     return {
@@ -23,7 +19,6 @@ class WatchRoomService {
     };
   }
 
-  /// Create a new watch room
   Future<WatchRoom?> createRoom({
     required String movieSlug,
     required String movieName,
@@ -58,7 +53,6 @@ class WatchRoomService {
     }
   }
 
-  /// Get all active watch rooms
   Future<List<WatchRoom>> getRooms() async {
     try {
       final headers = await _getHeaders();
@@ -75,7 +69,6 @@ class WatchRoomService {
         }
       }
 
-      print('Get rooms failed: ${response.body}');
       return [];
     } catch (e) {
       print('Get rooms error: $e');
@@ -83,7 +76,6 @@ class WatchRoomService {
     }
   }
 
-  /// Get room by code
   Future<WatchRoom?> getRoom(String code) async {
     try {
       final headers = await _getHeaders();
@@ -98,7 +90,6 @@ class WatchRoomService {
         }
       }
 
-      print('Get room failed: ${response.body}');
       return null;
     } catch (e) {
       print('Get room error: $e');
@@ -106,7 +97,6 @@ class WatchRoomService {
     }
   }
 
-  /// Join a room
   Future<WatchRoom?> joinRoom(String code) async {
     try {
       final headers = await _getHeaders();
@@ -121,7 +111,6 @@ class WatchRoomService {
         }
       }
 
-      print('Join room failed: ${response.body}');
       return null;
     } catch (e) {
       print('Join room error: $e');
@@ -129,7 +118,6 @@ class WatchRoomService {
     }
   }
 
-  /// Leave a room
   Future<bool> leaveRoom(String code) async {
     try {
       final headers = await _getHeaders();
@@ -142,7 +130,6 @@ class WatchRoomService {
         return data['success'] == true;
       }
 
-      print('Leave room failed: ${response.body}');
       return false;
     } catch (e) {
       print('Leave room error: $e');
@@ -150,7 +137,6 @@ class WatchRoomService {
     }
   }
 
-  /// Close a room (host only)
   Future<bool> closeRoom(String code) async {
     try {
       final headers = await _getHeaders();
@@ -166,7 +152,6 @@ class WatchRoomService {
         return data['success'] == true;
       }
 
-      print('Close room failed: ${response.body}');
       return false;
     } catch (e) {
       print('Close room error: $e');

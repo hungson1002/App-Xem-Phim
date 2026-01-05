@@ -1,3 +1,4 @@
+// Component thẻ hiển thị phim đã lưu, bao gồm ảnh, rating và nút xóa.
 import 'package:flutter/material.dart';
 import 'cached_image_widget.dart';
 
@@ -19,6 +20,7 @@ class BookmarkCard extends StatelessWidget {
     this.onTap,
   });
 
+  // Xây dựng giao diện thẻ bookmark với ảnh bìa, rating và thông tin cơ bản.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -28,7 +30,6 @@ class BookmarkCard extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Movie Poster
             Expanded(
               child: GestureDetector(
                 onTap: onTap,
@@ -42,7 +43,6 @@ class BookmarkCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
 
-                    // Rating Badge
                     Positioned(
                       top: 8,
                       left: 8,
@@ -71,7 +71,6 @@ class BookmarkCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Play Button Overlay
                     Center(
                       child: Container(
                         width: 48,
@@ -92,7 +91,6 @@ class BookmarkCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // Movie Title
             Text(
               title,
               style: TextStyle(
@@ -104,7 +102,6 @@ class BookmarkCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            // Year and Genre
             Text(
               '$year · $genre',
               style: TextStyle(
@@ -116,7 +113,6 @@ class BookmarkCard extends StatelessWidget {
             ),
           ],
         ),
-        // Delete Button
         Positioned(
           top: 8,
           right: 8,

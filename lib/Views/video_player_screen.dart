@@ -1,10 +1,9 @@
+// Màn hình phát video, bao gồm trình phát phim, danh sách tập và đề xuất.
 import 'package:flutter/material.dart';
 import '../models/movie_detail_model.dart';
-
 import '../Components/video_player/custom_video_player.dart';
 import '../Components/episode_server_list.dart';
 import '../Components/comment_section.dart';
-
 import '../services/history_service.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -42,7 +41,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   void _onProgress(Duration position) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    // Save every 15 seconds (optimized for performance)
     if (now - _lastSaveTime > 15000) {
       _saveProgress(position);
       _lastSaveTime = now;
@@ -50,7 +48,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _saveProgress(Duration position) {
-    if (position.inSeconds < 5) return; // Don't save if just started
+    if (position.inSeconds < 5) return;
 
     _historyService.saveProgress(
       MovieProgress(
@@ -85,33 +83,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get current episode URL
-    // Priority: m3u8 > embed
-    // However, m3u8 needs referer or valid token sometimes.
-    // Let's assume m3u8 works directly or handled by player.
-
-    // We need to fetch the actual link from ServerData/EpisodeData
-    // But wait, ServerData in EpisodeServerList is a UI model.
-    // We should use the raw data from MovieDetail to get the link.
-
     final currentServer = widget.movieDetail.episodes[_currentServerIndex];
     final currentEpisode = currentServer.episodes[_currentEpisodeIndex];
 
-    // Prefer m3u8 for native player
     String videoUrl = currentEpisode.linkM3u8;
     if (videoUrl.isEmpty) {
       videoUrl = currentEpisode.linkEmbed;
     }
-
-    // Auto proxy HLS if needed (optional, but good if domain is blocked)
-    // But video player might handle redirects.
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
-            // Video Player Area (Fixed aspect ratio)
             AspectRatio(
               aspectRatio: 16 / 9,
               child: Stack(
@@ -119,7 +103,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   CustomVideoPlayer(
                     key: ValueKey(
                       '${_currentServerIndex}_$_currentEpisodeIndex',
-                    ), // Reset player on change
+                    ),
                     videoUrl: videoUrl,
                     autoPlay: true,
                     startAt:
@@ -129,7 +113,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         : null,
                     onProgress: _onProgress,
                   ),
-                  // Back button overlay
                   Positioned(
                     top: 10,
                     left: 10,
@@ -152,7 +135,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               ),
             ),
 
-            // Info and List
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -186,7 +168,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
                     const Divider(color: Colors.grey, height: 1),
 
-                    // Episode List
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: EpisodeServerList(
@@ -204,7 +185,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
                     const Divider(color: Colors.grey, height: 1),
 
-                    // Comment Section
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
                       child: CommentSection(movieId: widget.movieDetail.slug),

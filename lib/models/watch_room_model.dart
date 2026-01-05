@@ -1,3 +1,4 @@
+// Model phòng xem chung.
 class WatchRoom {
   final String id;
   final String roomCode;
@@ -117,7 +118,7 @@ class Participant {
   }
 }
 
-// Video sync state model
+// Model trạng thái đồng bộ video.
 class VideoSyncState {
   final double currentTime;
   final bool isPlaying;

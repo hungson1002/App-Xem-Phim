@@ -1,3 +1,4 @@
+// Component hiển thị các nút hành động trong trang chi tiết phim (Xem ngay, Lưu phim).
 import 'package:flutter/material.dart';
 import '../custom_button.dart';
 
@@ -19,6 +20,7 @@ class MovieActionButtons extends StatelessWidget {
     this.watchText = 'Xem ngay',
   });
 
+  // Xây dựng giao diện hàng nút bấm: Nút Xem và Nút Lưu.
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -31,7 +33,6 @@ class MovieActionButtons extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        // Save to list button
         GestureDetector(
           onTap: isSaveLoading ? null : onSavePressed,
           child: Container(

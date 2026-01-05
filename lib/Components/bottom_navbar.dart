@@ -1,3 +1,4 @@
+// Component thanh điều hướng dưới cùng (Bottom Navigation Bar).
 import 'package:flutter/material.dart';
 
 class BottomNavbar extends StatelessWidget {
@@ -10,6 +11,7 @@ class BottomNavbar extends StatelessWidget {
     required this.onTap,
   });
 
+  // Xây dựng giao diện thanh điều hướng với 5 tab chính.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -1,3 +1,4 @@
+// Service quản lý bình luận phim.
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/comment_model.dart';
@@ -13,7 +14,6 @@ class CommentService {
 
   final AuthService _authService = AuthService();
 
-  // Lấy danh sách bình luận cho một bộ phim
   Future<List<Comment>> getComments(String movieId) async {
     try {
       final response = await http
@@ -34,16 +34,10 @@ class CommentService {
     }
   }
 
-  // Thêm bình luận mới
   Future<Comment?> addComment(String movieId, String content) async {
     try {
       final token = await _authService.getToken();
-      if (token == null) {
-        print("LỖI: Chưa có Token (Chưa đăng nhập)");
-        return null;
-      }
-
-      print("Đang gửi đến: ${ApiConfig.addCommentUrl}");
+      if (token == null) return null;
 
       final response = await http
           .post(
@@ -56,28 +50,19 @@ class CommentService {
           )
           .timeout(ApiConfig.timeout);
 
-      print("Status Code: ${response.statusCode}");
-      print("Server Response: ${response.body}");
-
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
           return Comment.fromJson(data['data']);
         }
       }
-
-      // Nếu không phải 201 thì in ra lỗi để biết đường sửa
-      print(
-        "GỬI THẤT BẠI. Code: ${response.statusCode}, Lý do: ${response.body}",
-      );
       return null;
     } catch (e) {
-      print('LỖI KẾT NỐI (Socket/Timeout): $e');
+      print('Error adding comment: $e');
       return null;
     }
   }
 
-  // Xóa bình luận
   Future<bool> deleteComment(String movieId, String commentId) async {
     try {
       final token = await _authService.getToken();
@@ -95,7 +80,6 @@ class CommentService {
     }
   }
 
-  // Sửa bình luận
   Future<bool> updateComment(
     String movieId,
     String commentId,

@@ -1,3 +1,4 @@
+// Modal tạo phòng xem phim, cho phép tìm kiếm và chọn phim.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/movie_service.dart';
@@ -95,6 +96,7 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
     });
   }
 
+  // Xây dựng giao diện Modal tìm kiếm phim và nút tạo phòng.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -107,7 +109,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
       ),
       child: Column(
         children: [
-          // Handle bar
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -118,7 +119,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
             ),
           ),
 
-          // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -154,7 +154,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
             ),
           ),
 
-          // Search Box
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
@@ -183,7 +182,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
 
           const SizedBox(height: 16),
 
-          // Movie List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -227,7 +225,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
                           ),
                           child: Row(
                             children: [
-                              // Poster
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
@@ -248,7 +245,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              // Info
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +272,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
                                   ],
                                 ),
                               ),
-                              // Check
                               if (isSelected)
                                 const Icon(
                                   Icons.check_circle,
@@ -290,7 +285,6 @@ class _CreateRoomModalState extends State<CreateRoomModal> {
                   ),
           ),
 
-          // Bottom Button
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(

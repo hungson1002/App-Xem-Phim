@@ -1,12 +1,10 @@
+// Service quản lý phim yêu thích (Bookmarking).
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../models/movie_model.dart';
 import 'api_config.dart';
 import 'auth_service.dart';
 
-/// Response model for bookmark operations
 class BookmarkResponse {
   final bool success;
   final String? message;
@@ -41,7 +39,6 @@ class BookmarkResponse {
   }
 }
 
-/// Model for a single bookmark item
 class BookmarkItem {
   final String id;
   final String movieId;
@@ -81,7 +78,6 @@ class BookmarkItem {
   }
 }
 
-/// Service class for bookmark operations
 class BookmarkService {
   static final BookmarkService _instance = BookmarkService._internal();
   factory BookmarkService() => _instance;
@@ -89,7 +85,6 @@ class BookmarkService {
 
   final AuthService _authService = AuthService();
 
-  /// Get all bookmarks for the current user
   Future<BookmarkResponse> getBookmarks() async {
     try {
       final token = await _authService.getToken();
@@ -114,7 +109,6 @@ class BookmarkService {
     }
   }
 
-  /// Add a movie to bookmarks
   Future<BookmarkResponse> addBookmark(Movie movie) async {
     try {
       final token = await _authService.getToken();
@@ -147,7 +141,6 @@ class BookmarkService {
     }
   }
 
-  /// Remove a movie from bookmarks
   Future<BookmarkResponse> removeBookmark(String movieId) async {
     try {
       final token = await _authService.getToken();
@@ -172,7 +165,6 @@ class BookmarkService {
     }
   }
 
-  /// Check if a movie is bookmarked
   Future<bool> checkBookmark(String movieId) async {
     try {
       final token = await _authService.getToken();

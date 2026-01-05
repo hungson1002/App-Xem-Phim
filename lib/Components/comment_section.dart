@@ -1,3 +1,4 @@
+// Component phần bình luận, bao gồm danh sách bình luận, input nhập bình luận, chức năng sửa/xóa.
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/comment_model.dart';
@@ -53,7 +54,6 @@ class _CommentSectionState extends State<CommentSection> {
     }
   }
 
-  // --- HÀM THÊM BÌNH LUẬN ---
   Future<void> _addComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
@@ -109,7 +109,6 @@ class _CommentSectionState extends State<CommentSection> {
     }
   }
 
-  // --- HÀM HIỆN HỘP THOẠI SỬA (MỚI) ---
   void _showEditDialog(Comment comment) {
     final editController = TextEditingController(text: comment.content);
 
@@ -134,9 +133,8 @@ class _CommentSectionState extends State<CommentSection> {
           ElevatedButton(
             onPressed: () async {
               if (editController.text.trim().isEmpty) return;
-              Navigator.pop(context); // Đóng dialog
+              Navigator.pop(context);
 
-              // Gọi Service
               final success = await _commentService.updateComment(
                 widget.movieId,
                 comment.id!,
@@ -145,7 +143,6 @@ class _CommentSectionState extends State<CommentSection> {
 
               if (success && mounted) {
                 setState(() {
-                  // Cập nhật UI ngay lập tức
                   comment.content = editController.text.trim();
                 });
                 ScaffoldMessenger.of(
@@ -167,7 +164,6 @@ class _CommentSectionState extends State<CommentSection> {
     );
   }
 
-  // --- HÀM XÁC NHẬN XÓA (MỚI) ---
   void _confirmDelete(Comment comment) {
     showDialog(
       context: context,
@@ -181,9 +177,8 @@ class _CommentSectionState extends State<CommentSection> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Đóng dialog
+              Navigator.pop(context);
 
-              // Gọi Service
               final success = await _commentService.deleteComment(
                 widget.movieId,
                 comment.id!,
@@ -191,7 +186,7 @@ class _CommentSectionState extends State<CommentSection> {
 
               if (success && mounted) {
                 setState(() {
-                  _comments.remove(comment); // Xóa khỏi danh sách trên màn hình
+                  _comments.remove(comment);
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Đã xóa bình luận!')),
@@ -218,6 +213,7 @@ class _CommentSectionState extends State<CommentSection> {
     super.dispose();
   }
 
+  // Xây dựng giao diện danh sách bình luận và phần nhập liệu.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -225,7 +221,6 @@ class _CommentSectionState extends State<CommentSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -242,7 +237,6 @@ class _CommentSectionState extends State<CommentSection> {
 
         const SizedBox(height: 16),
 
-        // List Comments
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else if (_comments.isEmpty)
@@ -271,7 +265,6 @@ class _CommentSectionState extends State<CommentSection> {
             },
           ),
 
-        // Input Box
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -335,10 +328,7 @@ class _CommentSectionState extends State<CommentSection> {
     );
   }
 
-  // --- WIDGET HIỂN THỊ 1 DÒNG BÌNH LUẬN (ĐÃ UPDATE) ---
   Widget _buildComment({required bool isDark, required Comment comment}) {
-    // 1. Kiểm tra quyền sở hữu
-    // So sánh ID user đang đăng nhập và ID user của comment
     final bool isOwner =
         _currentUser != null &&
         comment.user != null &&
@@ -356,7 +346,6 @@ class _CommentSectionState extends State<CommentSection> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar
               CircleAvatar(
                 radius: 20,
                 backgroundColor: isDark ? Colors.grey[700] : Colors.grey[300],
@@ -377,12 +366,10 @@ class _CommentSectionState extends State<CommentSection> {
               ),
               const SizedBox(width: 12),
 
-              // Nội dung + Tên + Menu
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hàng chứa Tên và Nút 3 chấm
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -395,7 +382,6 @@ class _CommentSectionState extends State<CommentSection> {
                           ),
                         ),
 
-                        // CHỈ HIỆN NÚT 3 CHẤM NẾU LÀ CHÍNH CHỦ
                         if (isOwner)
                           SizedBox(
                             height: 24,

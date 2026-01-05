@@ -1,12 +1,10 @@
+// Component Video Player đồng bộ hóa (Synced), cho phép Host điều khiển và Guest xem cùng lúc.
 import 'dart:async';
-
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-
 import '../../services/socket_service.dart';
 
-/// Synced video player - host can control, guest syncs automatically
 class SyncedVideoPlayer extends StatefulWidget {
   final String videoUrl;
   final bool isHost;
@@ -46,7 +44,6 @@ class _SyncedVideoPlayerState extends State<SyncedVideoPlayer> {
   }
 
   void _setupSocketListeners() {
-    // Guest syncs to host
     if (!widget.isHost) {
       _subscriptions.add(
         widget.socketService.onVideoPlay.listen((state) {
@@ -121,7 +118,6 @@ class _SyncedVideoPlayerState extends State<SyncedVideoPlayer> {
         aspectRatio: _videoController!.value.aspectRatio,
         allowFullScreen: true,
         allowPlaybackSpeedChanging: widget.isHost,
-        // Host sees all controls, guest sees only fullscreen button
         showControls: true,
         showControlsOnInitialize: widget.isHost,
         customControls: widget.isHost ? null : const GuestControls(),
@@ -180,6 +176,7 @@ class _SyncedVideoPlayerState extends State<SyncedVideoPlayer> {
     super.dispose();
   }
 
+  // Xây dựng giao diện Video Player với các điều khiển tùy chỉnh cho Host/Guest.
   @override
   Widget build(BuildContext context) {
     if (_isError) {
@@ -214,7 +211,7 @@ class _SyncedVideoPlayerState extends State<SyncedVideoPlayer> {
   }
 }
 
-/// Custom controls for guest - only shows fullscreen button
+// Giao diện điều khiển cho Guest - chỉ hiển thị nút toàn màn hình và thanh tiến trình (chỉ xem).
 class GuestControls extends StatelessWidget {
   const GuestControls({super.key});
 
@@ -224,7 +221,6 @@ class GuestControls extends StatelessWidget {
 
     return Stack(
       children: [
-        // Progress bar (view only)
         Positioned(
           bottom: 0,
           left: 0,
@@ -248,7 +244,6 @@ class GuestControls extends StatelessWidget {
           ),
         ),
 
-        // Fullscreen button only
         Positioned(
           bottom: 8,
           right: 8,

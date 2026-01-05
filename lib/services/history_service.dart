@@ -1,3 +1,4 @@
+// Service lưu trữ lịch sử xem phim (tiến độ xem) vào SharedPreferences.
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 

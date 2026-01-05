@@ -1,3 +1,4 @@
+// Component danh sách phim liên quan (Recommend), hiển thị trong chi tiết xem phim.
 import 'package:flutter/material.dart';
 import '../models/movie_model.dart';
 import '../services/movie_service.dart';
@@ -5,7 +6,7 @@ import 'cached_image_widget.dart';
 
 class RelatedMoviesList extends StatefulWidget {
   final String categorySlug;
-  final String currentMovieId; // To exclude current movie if needed
+  final String currentMovieId;
   final Function(String slug) onMovieTap;
 
   const RelatedMoviesList({
@@ -46,7 +47,6 @@ class _RelatedMoviesListState extends State<RelatedMoviesList> {
 
     setState(() => _isLoading = true);
 
-    // Fetch movies from the same category
     final movies = await _movieService.getMoviesByCategory(
       widget.categorySlug,
       limit: 10,
@@ -54,13 +54,13 @@ class _RelatedMoviesListState extends State<RelatedMoviesList> {
 
     if (mounted) {
       setState(() {
-        // Filter out the current movie
         _movies = movies.where((m) => m.slug != widget.currentMovieId).toList();
         _isLoading = false;
       });
     }
   }
 
+  // Xây dựng danh sách phim liên quan (cuộn ngang).
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {

@@ -1,5 +1,5 @@
+// Màn hình hiển thị hồ sơ người dùng, cài đặt và tùy chọn tài khoản.
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -45,10 +45,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == _currentIndex) return;
 
     if (index == 0) {
-      // Quay về trang chủ
       Navigator.popUntil(context, (route) => route.isFirst);
     } else {
-      // Chuyển đến tab khác
       Widget destination;
       switch (index) {
         case 1:
@@ -89,7 +87,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final avatar = _user!.avatar!;
     if (avatar.startsWith('data:image')) {
-      // Base64 image
       try {
         final base64Data = avatar.split(',').last;
         return MemoryImage(base64Decode(base64Data));
@@ -97,7 +94,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return null;
       }
     } else {
-      // URL image
       return NetworkImage(avatar);
     }
   }
@@ -129,8 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-
-                  // Profile Avatar
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: const Color(0xFF5BA3F5),
@@ -143,10 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           )
                         : null,
                   ),
-
                   const SizedBox(height: 16),
-
-                  // User Name
                   Text(
                     _user?.name ?? 'Tên người dùng',
                     style: TextStyle(
@@ -155,18 +146,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  // Email
                   Text(
                     _user?.email ?? 'user@example.com',
                     style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
-
                   const SizedBox(height: 32),
-
-                  // Profile Options
                   _buildProfileOption(
                     icon: Icons.person_outline,
                     title: 'Chỉnh sửa hồ sơ',
@@ -233,15 +218,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     textColor: Colors.red,
                     onTap: _logout,
                   ),
-
                   const SizedBox(height: 20),
-
-                  // App Version
                   const Text(
                     'Phiên bản 1.0.0',
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
-
                   const SizedBox(height: 80),
                 ],
               ),

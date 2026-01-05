@@ -1,5 +1,5 @@
+// Màn hình chính của ứng dụng, hiển thị các phim nổi bật, mới và theo danh mục.
 import 'package:flutter/material.dart';
-
 import '../Components/bottom_navbar.dart';
 import '../Components/home_app_bar.dart';
 import '../Components/movie_section.dart';
@@ -37,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen to saved movie changes
     savedMovieNotifier.addListener(_onSavedMoviesChanged);
     _loadData();
   }
@@ -58,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
     final user = await _authService.getUser();
 
-    // Lấy dữ liệu thực từ API
     final featured = await _movieService.getMoviesLimit(5);
     final newRelease = await _movieService.getMoviesByYear(2025, limit: 10);
     final recommended = await _movieService.getMoviesByCategory(
@@ -66,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
       limit: 10,
     );
 
-    // Load saved movies state
     await savedMovieNotifier.loadSavedMovies();
 
     if (mounted) {
@@ -107,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Widget destination;
     switch (index) {
       case 0:
-        return; // Current screen
+        return;
       case 1:
         destination = const SearchScreen();
         break;
@@ -134,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Get saved states for featured movies from notifier
     final featuredSavedStates = _featuredMovies
         .map((m) => savedMovieNotifier.isMovieSaved(m.slug))
         .toList();
@@ -146,10 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // App Bar
             HomeAppBar(user: _user),
-
-            // Featured Movie Slide
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -183,21 +176,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
               ),
             ),
-
-            // Tiếp tục xem Section
             SliverToBoxAdapter(
               child: MovieSection(
                 title: 'Tiếp tục xem',
                 movies: _newMovies,
                 isLoading: _isLoading,
-                onSeeAll: () {
-                  // Xử lý xem tất cả
-                },
+                onSeeAll: () {},
                 titleIcon: Icons.play_circle_outline,
               ),
             ),
-
-            // Phim mới ra mắt Section
             SliverToBoxAdapter(
               child: MovieSection(
                 title: 'Phim mới ra mắt',
@@ -206,8 +193,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 onSeeAll: () {},
               ),
             ),
-
-            // Top 10 tại Việt Nam Section
             SliverToBoxAdapter(
               child: MovieSection(
                 title: 'Top 10 tại Việt Nam',
@@ -216,7 +201,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 onSeeAll: () {},
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),

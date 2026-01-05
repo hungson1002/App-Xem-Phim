@@ -1,3 +1,4 @@
+// Component slide phim (Banner), tự động cuộn và có hiệu ứng zoom.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -53,6 +54,7 @@ class _MovieSlideState extends State<MovieSlide> {
     super.dispose();
   }
 
+  // Xây dựng Slide Banner với hiệu ứng scale và opacity cho item không active.
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -97,14 +99,12 @@ class _MovieSlideState extends State<MovieSlide> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          // Background Image
                           CachedImageWidget(
                             imageUrl: movie['image'] ?? '',
                             fit: BoxFit.cover,
                             borderRadius: BorderRadius.circular(20),
                           ),
 
-                          // Gradient overlay
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
@@ -122,7 +122,6 @@ class _MovieSlideState extends State<MovieSlide> {
                             ),
                           ),
 
-                          // Top row: Rating & Bookmark
                           Positioned(
                             top: 14,
                             left: 14,
@@ -130,7 +129,6 @@ class _MovieSlideState extends State<MovieSlide> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // Rating badge
                                 if (movie['rating'] != null)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -164,7 +162,6 @@ class _MovieSlideState extends State<MovieSlide> {
                                 else
                                   const SizedBox(),
 
-                                // Bookmark
                                 GestureDetector(
                                   onTap: () => widget.onBookmark?.call(index),
                                   child: Container(
@@ -190,7 +187,6 @@ class _MovieSlideState extends State<MovieSlide> {
                             ),
                           ),
 
-                          // Bottom content
                           Positioned(
                             bottom: 16,
                             left: 16,
@@ -198,7 +194,6 @@ class _MovieSlideState extends State<MovieSlide> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Title
                                 Text(
                                   movie['title'] ?? '',
                                   style: const TextStyle(
@@ -212,7 +207,6 @@ class _MovieSlideState extends State<MovieSlide> {
                                 ),
                                 const SizedBox(height: 8),
 
-                                // Tags row
                                 Wrap(
                                   spacing: 8,
                                   runSpacing: 6,
@@ -230,7 +224,6 @@ class _MovieSlideState extends State<MovieSlide> {
                                 ),
                                 const SizedBox(height: 14),
 
-                                // Play button
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
@@ -275,7 +268,6 @@ class _MovieSlideState extends State<MovieSlide> {
 
         const SizedBox(height: 12),
 
-        // Dots indicator
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(

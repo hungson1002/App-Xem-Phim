@@ -1,12 +1,10 @@
+// Service API quản lý danh sách phim đã lưu (Saved Movies).
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../models/movie_model.dart';
 import 'api_config.dart';
 import 'auth_service.dart';
 
-/// Response model for saved movie operations
 class SavedMovieResponse {
   final bool success;
   final String? message;
@@ -34,7 +32,6 @@ class SavedMovieResponse {
   }
 }
 
-/// Model for a single saved movie item
 class SavedMovieItem {
   final String id;
   final String movieSlug;
@@ -60,7 +57,6 @@ class SavedMovieItem {
   }
 }
 
-/// Service class for saved movie operations
 class SavedMovieService {
   static final SavedMovieService _instance = SavedMovieService._internal();
   factory SavedMovieService() => _instance;
@@ -68,7 +64,6 @@ class SavedMovieService {
 
   final AuthService _authService = AuthService();
 
-  /// Get all saved movies for the current user
   Future<SavedMovieResponse> getSavedMovies() async {
     try {
       final token = await _authService.getToken();
@@ -93,7 +88,6 @@ class SavedMovieService {
     }
   }
 
-  /// Save a movie (using movie slug as movieID)
   Future<SavedMovieResponse> saveMovie(String movieSlug) async {
     try {
       final token = await _authService.getToken();
@@ -122,7 +116,6 @@ class SavedMovieService {
     }
   }
 
-  /// Remove a movie from saved list
   Future<SavedMovieResponse> removeSavedMovie(String movieSlug) async {
     try {
       final token = await _authService.getToken();
@@ -150,7 +143,6 @@ class SavedMovieService {
     }
   }
 
-  /// Check if a movie is saved (by fetching all saved movies and checking)
   Future<bool> isMovieSaved(String movieSlug) async {
     try {
       final response = await getSavedMovies();
@@ -163,7 +155,6 @@ class SavedMovieService {
     }
   }
 
-  /// Toggle save status of a movie
   Future<SavedMovieResponse> toggleSaveMovie(String movieSlug) async {
     final isSaved = await isMovieSaved(movieSlug);
     if (isSaved) {

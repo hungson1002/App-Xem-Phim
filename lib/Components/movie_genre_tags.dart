@@ -1,6 +1,6 @@
+// Component hiển thị các tag thể loại phim và rating.
 import 'package:flutter/material.dart';
 
-/// Widget hiển thị các tag thể loại phim và rating
 class MovieGenreTags extends StatelessWidget {
   final List<String> genres;
   final double? rating;
@@ -13,6 +13,7 @@ class MovieGenreTags extends StatelessWidget {
     this.primaryColor = const Color(0xFF5BA3F5),
   });
 
+  // Xây dựng danh sách tag (Chip) và Badge rating nếu có.
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -20,7 +21,6 @@ class MovieGenreTags extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // Genre chips
         ...genres.asMap().entries.map((entry) {
           final index = entry.key;
           final genre = entry.value;
@@ -30,7 +30,6 @@ class MovieGenreTags extends StatelessWidget {
           );
         }),
 
-        // Rating badge
         if (rating != null) _buildRatingBadge(rating!),
       ],
     );

@@ -1,3 +1,4 @@
+// Component thẻ (Chip) hiển thị tên danh mục, có trạng thái chọn.
 import 'package:flutter/material.dart';
 
 class CategoryChip extends StatelessWidget {
@@ -12,6 +13,7 @@ class CategoryChip extends StatelessWidget {
     this.icon,
   });
 
+  // Xây dựng giao diện Chip với màu sắc thay đổi theo trạng thái chọn.
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

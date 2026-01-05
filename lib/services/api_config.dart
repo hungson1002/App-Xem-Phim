@@ -1,17 +1,12 @@
-/// API Configuration for the Flutter app
-
+// Cấu hình API endpoints và hằng số hệ thống.
 class ApiConfig {
-  // Base URL for the backend API
-  // Android Emulator: dùng 10.0.2.2 thay cho localhost
   static const String baseUrl = 'http://10.0.2.2:4000';
 
-  // API Endpoints
   static const String authEndpoint = '/api/auth';
   static const String userEndpoint = '/api/user';
   static const String commentEndpoint = '/api/comments';
   static const String movieEndpoint = '/api/movies';
 
-  // Auth endpoints
   static String get registerUrl => '$baseUrl$authEndpoint/register';
   static String get loginUrl => '$baseUrl$authEndpoint/login';
   static String get verifyEmailUrl => '$baseUrl$authEndpoint/verify-email';
@@ -22,15 +17,12 @@ class ApiConfig {
       '$baseUrl$authEndpoint/forgot-password';
   static String get resetPasswordUrl => '$baseUrl$authEndpoint/reset-password';
 
-  // User endpoints
   static String updateUserUrl(String userId) => '$baseUrl$userEndpoint/$userId';
 
-  // Comment endpoints
   static String getCommentsUrl(String movieId) =>
       '$baseUrl$commentEndpoint/$movieId';
   static String get addCommentUrl => '$baseUrl$commentEndpoint/add';
 
-  // Movie endpoints
   static String getMoviesLimitUrl(int limit) =>
       '$baseUrl$movieEndpoint/limit/$limit';
   static String getMoviesByCategoryUrl(String slug) =>
@@ -43,7 +35,6 @@ class ApiConfig {
       '$baseUrl$movieEndpoint/$slug';
   static String get searchMoviesUrl => '$baseUrl$movieEndpoint';
 
-  // Bookmark endpoints
   static const String bookmarkEndpoint = '/api/bookmarks';
   static String get getBookmarksUrl => '$baseUrl$bookmarkEndpoint';
   static String get addBookmarkUrl => '$baseUrl$bookmarkEndpoint';
@@ -52,14 +43,12 @@ class ApiConfig {
   static String checkBookmarkUrl(String movieId) =>
       '$baseUrl$bookmarkEndpoint/check/$movieId';
 
-  // SavedMovie endpoints
   static const String savedMovieEndpoint = '/api/saved-movies';
   static String get getSavedMoviesUrl => '$baseUrl$savedMovieEndpoint';
   static String get saveMovieUrl => '$baseUrl$savedMovieEndpoint';
   static String removeSavedMovieUrl(String movieId) =>
       '$baseUrl$savedMovieEndpoint/$movieId';
 
-  // WatchRoom endpoints
   static const String watchRoomEndpoint = '/api/watch-rooms';
   static String get getWatchRoomsUrl => '$baseUrl$watchRoomEndpoint';
   static String get createWatchRoomUrl => '$baseUrl$watchRoomEndpoint';
@@ -72,13 +61,10 @@ class ApiConfig {
   static String closeWatchRoomUrl(String code) =>
       '$baseUrl$watchRoomEndpoint/$code';
 
-  // Socket URL (same host, different protocol handling)
   static String get socketUrl => baseUrl;
 
-  // Request timeout
   static const Duration timeout = Duration(seconds: 30);
 
-  // Shared Preferences keys
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
 }

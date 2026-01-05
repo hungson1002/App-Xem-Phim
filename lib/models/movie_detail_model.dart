@@ -1,4 +1,4 @@
-/// Model cho chi tiết phim với episodes và actors
+// Model cho chi tiết phim với danh sách tập và diễn viên.
 class MovieDetail {
   final String id;
   final String name;
@@ -16,7 +16,7 @@ class MovieDetail {
   final String quality;
   final String lang;
   final String trailerUrl;
-  final List<Category> category; // Changed from List<String>
+  final List<Category> category;
   final List<String> country;
   final List<String> actors;
   final List<String> directors;
@@ -135,7 +135,7 @@ class Category {
   }
 }
 
-/// Model cho server (nguồn phát)
+// Model thông tin server.
 class ServerInfo {
   final String serverName;
   final List<EpisodeInfo> episodes;
@@ -154,7 +154,7 @@ class ServerInfo {
   }
 }
 
-/// Model cho episode
+// Model thông tin tập phim.
 class EpisodeInfo {
   final String name;
   final String slug;

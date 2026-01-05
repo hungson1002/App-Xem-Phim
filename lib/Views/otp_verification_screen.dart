@@ -1,5 +1,5 @@
+// Màn hình xác thực OTP khi đăng ký hoặc quên mật khẩu.
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -55,7 +55,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (value.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
     }
-    // Auto-verify when all 6 digits are entered
     if (_otpCode.length == 6) {
       _verifyOtp();
     }
@@ -136,7 +135,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       setState(() {
         _errorMessage = response.message ?? 'Mã OTP không hợp lệ';
       });
-      // Clear OTP fields on error
       for (var controller in _otpControllers) {
         controller.clear();
       }
@@ -155,8 +153,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // Back Button
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
@@ -169,10 +165,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     padding: EdgeInsets.zero,
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Email Icon
                 Container(
                   width: 90,
                   height: 90,
@@ -186,10 +179,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     color: Color(0xFF5BA3F5),
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
-                // Title
                 const Text(
                   'Xác nhận Email',
                   style: TextStyle(
@@ -198,10 +188,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // Subtitle
                 Text(
                   'Nhập mã 6 số đã gửi đến',
                   style: TextStyle(color: Colors.grey[400], fontSize: 15),
@@ -215,10 +202,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Error Message
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(14),
@@ -248,8 +232,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       ],
                     ),
                   ),
-
-                // OTP Input Boxes
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(6, (index) {
@@ -295,10 +277,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     );
                   }),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Verify Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -330,10 +309,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Resend OTP
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -367,7 +343,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                   ],
                 ),
-
                 const SizedBox(height: 40),
               ],
             ),

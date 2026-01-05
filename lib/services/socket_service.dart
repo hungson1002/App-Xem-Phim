@@ -1,11 +1,9 @@
+// Service Singleton quản lý kết nối Socket.IO cho tính năng WatchAlong.
 import 'dart:async';
-
 import 'package:socket_io_client/socket_io_client.dart' as io;
-
 import '../models/watch_room_model.dart';
 import 'api_config.dart';
 
-/// Singleton service to manage Socket.IO connection for WatchAlong feature
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
@@ -15,7 +13,6 @@ class SocketService {
   String? _currentRoomCode;
   String? _userId;
 
-  // Stream controllers for events
   final _onVideoPlayController = StreamController<VideoSyncState>.broadcast();
   final _onVideoPauseController = StreamController<VideoSyncState>.broadcast();
   final _onVideoSeekController = StreamController<VideoSyncState>.broadcast();
@@ -29,7 +26,6 @@ class SocketService {
   final _onRoomClosedController = StreamController<String>.broadcast();
   final _onConnectedController = StreamController<bool>.broadcast();
 
-  // Streams for listening
   Stream<VideoSyncState> get onVideoPlay => _onVideoPlayController.stream;
   Stream<VideoSyncState> get onVideoPause => _onVideoPauseController.stream;
   Stream<VideoSyncState> get onVideoSeek => _onVideoSeekController.stream;
@@ -45,10 +41,8 @@ class SocketService {
   bool get isConnected => _socket?.connected ?? false;
   String? get currentRoomCode => _currentRoomCode;
 
-  /// Connect to Socket.IO server
   void connect({String? token}) {
     if (_socket != null && _socket!.connected) {
-      print('Socket already connected');
       return;
     }
 
@@ -64,12 +58,10 @@ class SocketService {
     );
 
     _socket!.onConnect((_) {
-      print('Socket connected');
       _onConnectedController.add(true);
     });
 
     _socket!.onDisconnect((_) {
-      print('Socket disconnected');
       _onConnectedController.add(false);
     });
 
@@ -77,7 +69,6 @@ class SocketService {
       print('Socket error: $error');
     });
 
-    // Listen to video events
     _socket!.on('video-play', (data) {
       _onVideoPlayController.add(VideoSyncState.fromJson(data));
     });
@@ -98,7 +89,6 @@ class SocketService {
       _onEpisodeChangeController.add(Map<String, dynamic>.from(data));
     });
 
-    // Listen to room events
     _socket!.on('user-joined', (data) {
       _onUserJoinedController.add(Map<String, dynamic>.from(data));
     });
@@ -115,7 +105,6 @@ class SocketService {
     _socket!.connect();
   }
 
-  /// Disconnect from server
   void disconnect() {
     if (_currentRoomCode != null) {
       leaveRoom(_currentRoomCode!);
@@ -124,10 +113,8 @@ class SocketService {
     _socket = null;
   }
 
-  /// Join a watch room
   void joinRoom(String roomCode, String userId, String userName) {
     if (_socket == null || !_socket!.connected) {
-      print('Socket not connected, connecting first...');
       connect();
     }
 
@@ -141,13 +128,11 @@ class SocketService {
     });
   }
 
-  /// Leave current room
   void leaveRoom(String roomCode) {
     _socket?.emit('leave-room', {'roomCode': roomCode});
     _currentRoomCode = null;
   }
 
-  /// Emit video play event
   void emitPlay(double currentTime) {
     if (_currentRoomCode == null) return;
     _socket?.emit('video-play', {
@@ -157,7 +142,6 @@ class SocketService {
     });
   }
 
-  /// Emit video pause event
   void emitPause(double currentTime) {
     if (_currentRoomCode == null) return;
     _socket?.emit('video-pause', {
@@ -167,7 +151,6 @@ class SocketService {
     });
   }
 
-  /// Emit video seek event
   void emitSeek(double currentTime) {
     if (_currentRoomCode == null) return;
     _socket?.emit('video-seek', {
@@ -177,7 +160,6 @@ class SocketService {
     });
   }
 
-  /// Emit episode change event
   void emitEpisodeChange(int serverIndex, int episodeIndex) {
     if (_currentRoomCode == null) return;
     _socket?.emit('episode-change', {
@@ -188,19 +170,16 @@ class SocketService {
     });
   }
 
-  /// Request current sync state from server
   void requestSync() {
     if (_currentRoomCode == null) return;
     _socket?.emit('sync-request', {'roomCode': _currentRoomCode});
   }
 
-  /// Close room (host only)
   void closeRoom(String roomCode) {
     _socket?.emit('close-room', {'roomCode': roomCode});
     _currentRoomCode = null;
   }
 
-  /// Dispose all stream controllers
   void dispose() {
     disconnect();
     _onVideoPlayController.close();

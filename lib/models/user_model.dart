@@ -1,6 +1,6 @@
+// Model thông tin người dùng.
 import 'dart:convert';
 
-/// User model representing the authenticated user
 class User {
   final String id;
   final String name;

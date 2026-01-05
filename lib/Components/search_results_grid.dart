@@ -1,3 +1,4 @@
+// Component lưới hiển thị kết quả tìm kiếm phim.
 import 'package:flutter/material.dart';
 import '../models/movie_model.dart';
 import 'movie_card.dart';
@@ -22,6 +23,7 @@ class SearchResultsGrid extends StatelessWidget {
     this.scrollController,
   });
 
+  // Xây dựng lưới grid 2 cột hiển thị các phim tìm được.
   @override
   Widget build(BuildContext context) {
     if (isLoading) {

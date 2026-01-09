@@ -170,27 +170,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
                   _buildProfileOption(
-                    icon: Icons.notifications_outlined,
-                    title: 'Thông báo',
-                    onTap: () {},
-                  ),
-                  _buildProfileOption(
-                    icon: Icons.download_outlined,
-                    title: 'Tải xuống',
-                    onTap: () {},
-                  ),
-                  _buildProfileOption(
-                    icon: Icons.security_outlined,
-                    title: 'Bảo mật',
-                    onTap: () {},
-                  ),
-                  _buildProfileOption(
-                    icon: Icons.language_outlined,
-                    title: 'Ngôn ngữ',
-                    subtitle: 'Tiếng Việt',
-                    onTap: () {},
-                  ),
-                  _buildProfileOption(
                     icon: Icons.dark_mode_outlined,
                     title: 'Chế độ tối',
                     trailing: Switch(
@@ -200,16 +179,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                       activeTrackColor: const Color(0xFF5BA3F5),
                     ),
-                  ),
-                  _buildProfileOption(
-                    icon: Icons.help_outline,
-                    title: 'Trợ giúp',
-                    onTap: () {},
-                  ),
-                  _buildProfileOption(
-                    icon: Icons.privacy_tip_outlined,
-                    title: 'Chính sách bảo mật',
-                    onTap: () {},
                   ),
                   _buildProfileOption(
                     icon: Icons.logout,
